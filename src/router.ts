@@ -1,5 +1,7 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import type { JevClient } from "./jev.js";
+import { JEV_TOOL_NAMES, isJevTool } from "./types.js";
+import { JEV_THRESHOLD } from "./skills.js";
 
 export interface ToolMetadata {
   name: string;
@@ -41,7 +43,7 @@ export class ToolRouter {
     const active = new Set(this.pi.getActiveTools());
     const all = this.getAvailableTools();
 
-    const inactive = all.filter((t) => !active.has(t.name) && t.name !== "jev_find_tools");
+    const inactive = all.filter((t) => !active.has(t.name) && !isJevTool(t.name));
     const terms = query.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
 
     if (terms.length === 0) {
@@ -63,7 +65,7 @@ export class ToolRouter {
 
   public async findAndActivate(
     query: string,
-    threshold = 0.65,
+    threshold = JEV_THRESHOLD,
     signal?: AbortSignal
   ): Promise<RouterResult> {
     const startTime = Date.now();

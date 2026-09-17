@@ -1,6 +1,6 @@
 {
   "name": "pi-jev",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Semantic tool routing and typed System One decisions for the Pi coding agent using TypeSafe Jev",
   "type": "module",
   "main": "extensions/index.ts",
@@ -29,7 +29,7 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "node --test --import tsx test/*.test.ts",
-    "smoke": "pi -e ./extensions/index.ts -p --no-session \"list loaded tools\""
+    "smoke": "pi -ne -e ./extensions/index.ts -p --no-session \"list loaded tools\""
   },
   "engines": {
     "node": ">=20.0.0"

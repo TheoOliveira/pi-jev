@@ -10,10 +10,12 @@ import type {
   QuestionConfig,
 } from "./types.js";
 
-function resolveApiKey(): string | null {
-  if (process.env.TYPESAFE_API_KEY) {
-    return process.env.TYPESAFE_API_KEY.trim();
-  }
+export type ApiKeySource = "env" | "file";
+
+/** Resolve the API key together with where it came from, for status reporting. */
+export function resolveApiKeySource(): { key: string; source: ApiKeySource; origin: string } | null {
+  const envKey = process.env.TYPESAFE_API_KEY?.trim();
+  if (envKey) return { key: envKey, source: "env", origin: "$TYPESAFE_API_KEY" };
 
   const defaultSecretPath = path.join(
     os.homedir(),
@@ -25,13 +27,19 @@ function resolveApiKey(): string | null {
   if (fs.existsSync(defaultSecretPath)) {
     try {
       const content = fs.readFileSync(defaultSecretPath, "utf8").trim();
-      if (content) return content;
+      if (content) {
+        return { key: content, source: "file", origin: "~/.pi/agent/secrets/typesafe_api_key" };
+      }
     } catch {
       // Ignore read errors
     }
   }
 
   return null;
+}
+
+function resolveApiKey(): string | null {
+  return resolveApiKeySource()?.key ?? null;
 }
 
 export class JevClient {
@@ -47,7 +55,13 @@ export class JevClient {
   }
 
   public isConfigured(): boolean {
-    return Boolean(resolveApiKey() || this.apiKey);
+    return Boolean(resolveApiKeySource() || this.apiKey);
+  }
+
+  /** Human-readable description of where the API key came from, or null when unconfigured. */
+  public getKeyOrigin(): string | null {
+    if (this.apiKey) return "set in-session";
+    return resolveApiKeySource()?.origin ?? null;
   }
 
   public setApiKey(key: string): void {

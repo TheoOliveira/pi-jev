@@ -1,6 +1,9 @@
 import type { ExtensionAPI, ExtensionCommandContext, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import type { JevClient } from "./jev.js";
 
+/** Single activation cutoff for Jev probabilities. Raise to reduce noise, lower for recall. */
+export const JEV_THRESHOLD = 0.65;
+
 export interface SkillMetadata {
   name: string;
   description: string;
@@ -92,7 +95,7 @@ export class SkillRouter {
 
   public async findSkills(
     query: string,
-    threshold = 0.65,
+    threshold = JEV_THRESHOLD,
     ctx?: ExtensionContext,
     signal?: AbortSignal
   ): Promise<SkillRouterResult> {

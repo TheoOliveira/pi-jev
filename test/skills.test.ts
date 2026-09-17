@@ -38,7 +38,8 @@ test("SkillRouter fallback returns top candidates with 1.0 probability", async (
       })),
   };
 
-  const jevClient = new JevClient();
+  // Stub unconfigured client: local runs may have a real API key or secret file.
+  const jevClient = { isConfigured: () => false } as unknown as JevClient;
   const router = new SkillRouter(mockPi, jevClient);
 
   const res = await router.findSkills("make web accessible");

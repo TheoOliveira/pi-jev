@@ -1,5 +1,12 @@
 export type QuestionType = "choice" | "noul" | "score";
 
+/** Tools this extension owns. Never offered as router candidates and toggled together. */
+export const JEV_TOOL_NAMES = ["jev_find_tools", "jev_find_skill", "jev_evaluate"] as const;
+
+export function isJevTool(name: string): boolean {
+  return (JEV_TOOL_NAMES as readonly string[]).includes(name);
+}
+
 export interface BaseQuestionConfig {
   instructions: string;
 }

@@ -4,6 +4,7 @@ import type { JevClient } from "./jev.js";
 import type { ToolRouter } from "./router.js";
 import type { SkillRouter } from "./skills.js";
 import type { QuestionConfig } from "./types.js";
+import { JEV_THRESHOLD } from "./skills.js";
 
 export function registerJevTools(
   pi: ExtensionAPI,
@@ -27,7 +28,7 @@ export function registerJevTools(
       }),
       threshold: Type.Optional(
         Type.Number({
-          description: "Activation confidence threshold between 0.0 and 1.0 (default 0.65).",
+          description: "Activation confidence threshold between 0.0 and 1.0 (default JEV_THRESHOLD).",
         })
       ),
     }),
@@ -39,7 +40,7 @@ export function registerJevTools(
 
       const result = await router.findAndActivate(
         params.query,
-        params.threshold ?? 0.65,
+        params.threshold ?? JEV_THRESHOLD,
         signal
       );
 
@@ -79,7 +80,7 @@ export function registerJevTools(
       }),
       threshold: Type.Optional(
         Type.Number({
-          description: "Match confidence threshold between 0.0 and 1.0 (default 0.65).",
+          description: "Match confidence threshold between 0.0 and 1.0 (default JEV_THRESHOLD).",
         })
       ),
     }),
@@ -91,7 +92,7 @@ export function registerJevTools(
 
       const result = await skillRouter.findSkills(
         params.query,
-        params.threshold ?? 0.65,
+        params.threshold ?? JEV_THRESHOLD,
         ctx,
         signal
       );
