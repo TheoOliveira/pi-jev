@@ -5,6 +5,7 @@ Semantic tool routing and typed decisions for the [Pi coding agent](https://pi.d
 ## Features
 
 - **Semantic Tool Router (`jev_find_tools`)**: Automatically searches registered inactive tools and additively activates only the tools needed for the user's specific prompt or workflow.
+- **Skill Discovery (`jev_find_skill`)**: Semantically matches and suggests the most relevant specialized agent skills (`SKILL.md`) for any task without cluttering prompt context.
 - **Typed Judgments (`jev_evaluate`)**: Run fast, calibrated System One decisions directly from the agent using Choice, Noul (yes/no probability), and Score primitives.
 - **On-Demand & Safe**: Runs when called. No unsolicited per-turn API token costs. Fails open gracefully to local keyword shortlists if Jev is unreachable or unconfigured.
 
@@ -37,6 +38,7 @@ Then check status inside Pi:
 ## Commands
 
 - `/jev status` — Shows Jev configuration, session request count, total tokens, and available tool counts.
+- `/jev skills [query]` — Discover and rank matching skills in the workspace using Jev.
 - `/jev test` — Runs a sample dual-question evaluation against TypeSafe Jev.
 - `/jev enable` — Enables Jev tools in the active session.
 - `/jev disable` — Disables Jev tools for the active session.
@@ -52,7 +54,16 @@ Used by the model to find capabilities that aren't currently loaded into the pro
 }
 ```
 
-### 2. `jev_evaluate`
+### 2. `jev_find_skill`
+Used by the agent to find relevant specialized workflows and instructions for complex tasks.
+
+```json
+{
+  "query": "build accessible modal component in React"
+}
+```
+
+### 3. `jev_evaluate`
 Used for structured decisions, classifications, triage, and scoring.
 
 ```json

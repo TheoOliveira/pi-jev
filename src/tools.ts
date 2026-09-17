@@ -2,12 +2,14 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Type } from "@sinclair/typebox";
 import type { JevClient } from "./jev.js";
 import type { ToolRouter } from "./router.js";
+import type { SkillRouter } from "./skills.js";
 import type { QuestionConfig } from "./types.js";
 
 export function registerJevTools(
   pi: ExtensionAPI,
   jevClient: JevClient,
-  router: ToolRouter
+  router: ToolRouter,
+  skillRouter: SkillRouter
 ): void {
   // 1. Tool router tool: jev_find_tools
   pi.registerTool({
@@ -61,7 +63,63 @@ export function registerJevTools(
     },
   });
 
-  // 2. Typed evaluation tool: jev_evaluate
+  // 2. Skill finder tool: jev_find_skill
+  pi.registerTool({
+    name: "jev_find_skill",
+    label: "Jev Skill Finder",
+    description:
+      "Find and recommend the best matching agent skills for a specific task or problem using TypeSafe Jev semantic evaluation.",
+    promptSnippet: "Discover specialized skills/workflows relevant to current task",
+    promptGuidelines: [
+      "Use jev_find_skill when working on specialized tasks (e.g. testing, UI design, animations, security reviews, git conflicts) to locate the relevant SKILL.md guide.",
+    ],
+    parameters: Type.Object({
+      query: Type.String({
+        description: "The task, domain, or technology you need specialized skills for.",
+      }),
+      threshold: Type.Optional(
+        Type.Number({
+          description: "Match confidence threshold between 0.0 and 1.0 (default 0.65).",
+        })
+      ),
+    }),
+    async execute(_toolCallId, params: any, signal, onUpdate, ctx) {
+      onUpdate?.({
+        content: [{ type: "text", text: `Evaluating matching skills for: "${params.query}"...` }],
+        details: {},
+      });
+
+      const result = await skillRouter.findSkills(
+        params.query,
+        params.threshold ?? 0.65,
+        ctx,
+        signal
+      );
+
+      let summaryText = "";
+      if (result.recommended.length > 0) {
+        const lines = result.recommended.map(
+          (r) => `• /skill:${r.name} (P=${r.probability.toFixed(2)})${r.location ? ` - ${r.location}` : ""}\n  ${r.description}`
+        );
+        summaryText = `Recommended skill(s):\n${lines.join("\n")}\n\nTo use a skill, invoke /skill:<name> or use the read tool to open its SKILL.md file.`;
+      } else if (result.candidates.length > 0) {
+        summaryText = `No skills met the confidence threshold among candidates: ${result.candidates.join(", ")}`;
+      } else {
+        summaryText = `No registered skills found in session.`;
+      }
+
+      if (result.fallbackUsed) {
+        summaryText += "\n(Note: local heuristic shortlist used due to Jev unconfigured/offline)";
+      }
+
+      return {
+        content: [{ type: "text", text: summaryText }],
+        details: result,
+      };
+    },
+  });
+
+  // 3. Typed evaluation tool: jev_evaluate
   pi.registerTool({
     name: "jev_evaluate",
     label: "Jev Evaluate",

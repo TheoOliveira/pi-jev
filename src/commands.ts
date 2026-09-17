@@ -1,11 +1,13 @@
 import type { ExtensionAPI, ExtensionCommandContext } from "@earendil-works/pi-coding-agent";
 import type { JevClient } from "./jev.js";
 import type { ToolRouter } from "./router.js";
+import type { SkillRouter } from "./skills.js";
 
 export function registerJevCommands(
   pi: ExtensionAPI,
   jevClient: JevClient,
-  router: ToolRouter
+  router: ToolRouter,
+  skillRouter: SkillRouter
 ): void {
   pi.registerCommand("jev", {
     description: "Manage TypeSafe Jev integration (status, enable, disable, test)",
@@ -69,21 +71,54 @@ export function registerJevCommands(
         return;
       }
 
+      if (sub.startsWith("skills") || sub.startsWith("skill")) {
+        const query = sub.replace(/^skills?/, "").trim();
+        if (!query) {
+          const available = skillRouter.getAvailableSkills(ctx);
+          ctx.ui.notify(
+            `Available skills (${available.length}):\n` +
+              available.map((s) => `• ${s.name}: ${s.description.slice(0, 80)}...`).join("\n"),
+            "info"
+          );
+          return;
+        }
+
+        ctx.ui.notify(`Searching skills for: "${query}"...`, "info");
+        const res = await skillRouter.findSkills(query, 0.6, ctx);
+        if (res.recommended.length === 0) {
+          ctx.ui.notify(`No skills matched "${query}".`, "info");
+          return;
+        }
+
+        ctx.ui.notify(
+          `Matching skills for "${query}":\n` +
+            res.recommended
+              .map((r) => `• /skill:${r.name} (P=${r.probability.toFixed(2)}) - ${r.description}`)
+              .join("\n"),
+          "info"
+        );
+        return;
+      }
+
       if (sub === "enable") {
-        pi.setActiveTools([...new Set([...pi.getActiveTools(), "jev_find_tools", "jev_evaluate"])]);
-        ctx.ui.notify("Jev tools (jev_find_tools, jev_evaluate) enabled for this session.", "info");
+        pi.setActiveTools([
+          ...new Set([...pi.getActiveTools(), "jev_find_tools", "jev_find_skill", "jev_evaluate"]),
+        ]);
+        ctx.ui.notify("Jev tools (jev_find_tools, jev_find_skill, jev_evaluate) enabled for this session.", "info");
         return;
       }
 
       if (sub === "disable") {
-        const filtered = pi.getActiveTools().filter((t) => t !== "jev_find_tools" && t !== "jev_evaluate");
+        const filtered = pi.getActiveTools().filter(
+          (t) => t !== "jev_find_tools" && t !== "jev_find_skill" && t !== "jev_evaluate"
+        );
         pi.setActiveTools(filtered);
         ctx.ui.notify("Jev tools disabled for this session.", "info");
         return;
       }
 
       ctx.ui.notify(
-        `Unknown command /jev ${sub}. Available options: /jev status, /jev test, /jev enable, /jev disable`,
+        `Unknown command /jev ${sub}.\nAvailable options: /jev status, /jev skills [query], /jev test, /jev enable, /jev disable`,
         "warning"
       );
     },
