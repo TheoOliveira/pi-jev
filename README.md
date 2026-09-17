@@ -25,10 +25,17 @@ pi install git:github.com/TheoOliveira/pi-jev
 
 ## Setup
 
-Set your TypeSafe API key in your environment:
+Set your TypeSafe API key via environment variable:
 
 ```bash
 export TYPESAFE_API_KEY=ts_...
+```
+
+Or store it in Pi's secret store file:
+
+```bash
+mkdir -p ~/.pi/agent/secrets
+echo "ts_..." > ~/.pi/agent/secrets/typesafe_api_key
 ```
 
 Then check status inside Pi:
