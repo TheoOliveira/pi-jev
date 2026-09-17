@@ -1,0 +1,65 @@
+{
+  "name": "pi-jev",
+  "version": "0.1.0",
+  "description": "Semantic tool routing and typed System One decisions for the Pi coding agent using TypeSafe Jev",
+  "type": "module",
+  "main": "extensions/index.ts",
+  "keywords": [
+    "pi-package",
+    "pi-extension",
+    "pi-coding-agent",
+    "typesafe",
+    "jev",
+    "system-one",
+    "tool-router"
+  ],
+  "pi": {
+    "extensions": [
+      "./extensions/index.ts"
+    ]
+  },
+  "files": [
+    "extensions",
+    "src",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md",
+    "SECURITY.md"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "node --test --import tsx test/*.test.ts",
+    "smoke": "pi -e ./extensions/index.ts -p --no-session \"list loaded tools\""
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "@typesafe-ai/sdk": "^0.6.0"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-ai": "*",
+    "@earendil-works/pi-coding-agent": "*",
+    "@earendil-works/pi-tui": "*",
+    "@sinclair/typebox": "*"
+  },
+  "devDependencies": {
+    "@earendil-works/pi-ai": "^0.85.0",
+    "@earendil-works/pi-coding-agent": "^0.85.0",
+    "@earendil-works/pi-tui": "^0.85.0",
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "@sinclair/typebox": "^0.34.28",
+    "typescript": "^5.7.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TheoOliveira/pi-jev.git"
+  },
+  "bugs": {
+    "url": "https://github.com/TheoOliveira/pi-jev/issues"
+  },
+  "homepage": "https://github.com/TheoOliveira/pi-jev#readme",
+  "author": "Theophilo Damiao",
+  "license": "MIT"
+}
