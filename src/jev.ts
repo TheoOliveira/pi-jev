@@ -1,4 +1,7 @@
 import { TypeSafeClient, choice, noul, score } from "@typesafe-ai/sdk";
+import * as fs from "node:fs";
+import * as path from "node:path";
+import * as os from "node:os";
 import type {
   JevEvaluationRequest,
   JevEvaluationResponse,
@@ -6,6 +9,30 @@ import type {
   JevSessionStats,
   QuestionConfig,
 } from "./types.js";
+
+function resolveApiKey(): string | null {
+  if (process.env.TYPESAFE_API_KEY) {
+    return process.env.TYPESAFE_API_KEY.trim();
+  }
+
+  const defaultSecretPath = path.join(
+    os.homedir(),
+    ".pi",
+    "agent",
+    "secrets",
+    "typesafe_api_key"
+  );
+  if (fs.existsSync(defaultSecretPath)) {
+    try {
+      const content = fs.readFileSync(defaultSecretPath, "utf8").trim();
+      if (content) return content;
+    } catch {
+      // Ignore read errors
+    }
+  }
+
+  return null;
+}
 
 export class JevClient {
   private client: TypeSafeClient | null = null;
@@ -16,11 +43,11 @@ export class JevClient {
   };
 
   constructor() {
-    this.apiKey = process.env.TYPESAFE_API_KEY || null;
+    this.apiKey = resolveApiKey();
   }
 
   public isConfigured(): boolean {
-    return Boolean(process.env.TYPESAFE_API_KEY || this.apiKey);
+    return Boolean(resolveApiKey() || this.apiKey);
   }
 
   public setApiKey(key: string): void {
@@ -29,9 +56,9 @@ export class JevClient {
   }
 
   private getClient(): TypeSafeClient {
-    const key = process.env.TYPESAFE_API_KEY || this.apiKey;
+    const key = resolveApiKey() || this.apiKey;
     if (!key) {
-      throw new Error("Missing TYPESAFE_API_KEY. Set it in environment or enable via /jev.");
+      throw new Error("Missing TYPESAFE_API_KEY. Set it in environment or ~/.pi/agent/secrets/typesafe_api_key.");
     }
     if (!this.client) {
       this.client = new TypeSafeClient({ apiKey: key });
