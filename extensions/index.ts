@@ -8,6 +8,7 @@ import { registerJevCommands } from "../src/commands.js";
 import { AutoModelRouter } from "../src/model-router.js";
 import { JevCompactor } from "../src/compact.js";
 import { AgentOrchestrator } from "../src/orchestrator.js";
+import { JevAgentHandler } from "../src/agent.js";
 
 function envAutoEnabledFor(name: string): boolean {
   const raw = process.env[name]?.trim().toLowerCase();
@@ -56,8 +57,11 @@ export default function (pi: ExtensionAPI) {
   );
   const autoModel = new AutoModelRouter(pi, Boolean(pi.getFlag("jev-auto-model")));
   const compactor = new JevCompactor(jevClient, Boolean(pi.getFlag("jev-compact")));
-  const agents = new AgentOrchestrator(pi, Boolean(pi.getFlag("jev-agents")));
+  const agents = new AgentOrchestrator(pi, jevClient, Boolean(pi.getFlag("jev-agents")));
   agents.installCompletionNotice();
+
+  const agentHandler = new JevAgentHandler(pi, jevClient);
+  agentHandler.install();
 
   registerJevTools(pi, jevClient, router, skillRouter);
   registerJevCommands(pi, jevClient, router, skillRouter, auto, autoModel, compactor, agents);

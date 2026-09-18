@@ -11,7 +11,8 @@ Semantic tool routing and typed decisions for the [Pi coding agent](https://pi.d
 - **Automatic Mode (opt-in)**: `--jev-auto` / `PI_JEV_AUTO=1` / `/jev auto on` routes tools and suggests skills before every prompt. Off by default.
 - **Automatic Model Mode (opt-in)**: `--jev-auto-model` / `PI_JEV_AUTO_MODEL=1` / `/jev auto-model on` selects fast, balanced, reasoning, long-context, or vision models per prompt. Off by default.
 - **Jev Compaction (opt-in)**: `--jev-compact` / `PI_JEV_COMPACT=1` / `/jev compact on` uses Jev to retain important tool history during `/compact`, while Pi's normal compaction remains the safe fallback.
-- **Agent Orchestration**: `/jev agents <task>` dispatches `pi-subagents` orchestration; `--jev-agents` / `PI_JEV_AGENTS=1` plus `/jev auto-agents on` can dispatch complex prompts automatically.
+- **Agent Orchestration & Typed Agent**: `/jev agents <task>` dispatches `pi-subagents` orchestration; register `agent: "jev"` in workflows for instant sub-second typed judgments without LLM overhead.
+- **Post-Run Gate Check (`jev-gate` CLI)**: Fast binary for subagent `gate` parameters (`npx pi-jev-gate -c "criteria"`). Checks git diff / output and exits 0 on pass or 1 on fail.
 - **On-Demand & Safe**: Runs when called. No unsolicited per-turn API token costs. Fails open gracefully to local keyword shortlists if Jev is unreachable or unconfigured.
 
 ## Installation
@@ -65,9 +66,72 @@ Toggle at runtime with `/jev auto on` or `/jev auto off` (no argument flips it).
 
 `JEV_THRESHOLD` (in `src/skills.ts`) is the one act/reject cutoff: raise it for precision, lower it for recall. Every path — router, tools, `/jev skills`, auto mode — reads that same constant.
 
+### Jev Gate CLI (`pi-jev-gate` / `jev-gate`)
+
+Use `pi-jev-gate` as a post-run gate check for subagents or CI/CD pipelines. Evaluates git diff, file, or stdin against natural language criteria using Jev System One probability.
+
+- Exits `0` if evaluation probability meets threshold ($\ge 0.70$ by default).
+- Exits `1` if rejected.
+- Exits `2` on error (or `0` with `--fail-open`).
+
+#### Subagent `gate` Example
+Set a child subagent's `gate` parameter to run `pi-jev-gate` immediately upon completion:
+
+```json
+{
+  "agent": "worker",
+  "task": "Refactor auth middleware to use jose",
+  "gate": "npx pi-jev-gate -c 'Middleware strictly refactored without breaking exports and no new any types' -d -p 0.8"
+}
+```
+
+#### Pipeline / CLI Examples
+```bash
+# Check git diff against acceptance criteria
+npx pi-jev-gate -c "All exported functions have TypeScript type annotations" --diff
+
+# Check piped test/linter output
+npm test 2>&1 | npx pi-jev-gate -c "Zero test failures and no unhandled promise rejections"
+
+# JSON output with custom threshold
+npx pi-jev-gate -c "Documentation updated" -f ./README.md -p 0.85 --json
+```
+
+### Typed Jev Subagent (`agent: "jev"`)
+
+Register fast System One evaluations directly in `pi-subagents` workflows without spawning heavy LLM processes.
+
+#### Workflow Example
+```javascript
+export const meta = { name: "triage_workflow", description: "Classify and route tasks" };
+
+// 1. Instant typed classification with Jev
+const triage = await agent("Classify incoming issue", {
+  agent: "jev",
+  type: "choice",
+  criteria: {
+    bug: "Bug or regression in existing behavior",
+    feature: "New capability request",
+    docs: "Documentation or comment update"
+  },
+  state: args.issueBody
+});
+
+// 2. Route dynamically based on System One verdict
+if (triage.primaryValue === "bug") {
+  await agent("Fix reported bug and add test", { agent: "worker", task: args.issueBody });
+}
+```
+
 ### Agent Orchestration
 
-`/jev agents <task>` uses the installed `pi-subagents` RPC. A delegate agent selects the smallest useful team, runs independent work in parallel when safe, and returns a synthesis. It is asynchronous; completion is reported back into the session. Automatic dispatch is opt-in and uses conservative complexity signals. If `pi-subagents` is unavailable, the command reports the failure and does not alter the task.
+`/jev agents <task>` uses Jev System One to analyze task requirements and construct specialized multi-agent workflow scripts executed via `pi-subagents`:
+- **Implementation tasks**: Staged `scout` (code context) $\rightarrow$ `worker` (changes) $\rightarrow$ `reviewer` (standards & tests).
+- **Research tasks**: Parallel `scout` + `researcher` $\rightarrow$ `worker` synthesis.
+- **Review / Security tasks**: Parallel `reviewer` + `evidence-auditor`.
+- **General tasks**: `worker` $\rightarrow$ `reviewer`.
+
+Execution is asynchronous; completion is reported back into the session. Automatic dispatch is opt-in via `--jev-agents` / `PI_JEV_AGENTS=1` or `/jev auto-agents on`.
 
 ### Jev Compaction
 
