@@ -3,6 +3,9 @@ import type { JevClient } from "./jev.js";
 import type { ToolRouter } from "./router.js";
 import type { SkillRouter } from "./skills.js";
 import type { AutoJev } from "./auto.js";
+import type { AutoModelRouter } from "./model-router.js";
+import type { JevCompactor } from "./compact.js";
+import type { AgentOrchestrator } from "./orchestrator.js";
 import { designEvaluation } from "./designer.js";
 import type { JevEvaluationRequest } from "./types.js";
 import { JEV_TOOL_NAMES, isJevTool } from "./types.js";
@@ -13,8 +16,14 @@ export function registerJevCommands(
   jevClient: JevClient,
   router: ToolRouter,
   skillRouter: SkillRouter,
-  auto: AutoJev
+  auto: AutoJev,
+  autoModel?: AutoModelRouter,
+  compactor?: JevCompactor,
+  agents?: AgentOrchestrator
 ): void {
+  const agentMode = agents ?? { enabled: false, setEnabled: () => {}, dispatch: async () => ({ accepted: false, error: "disabled" }) };
+  const compactMode = compactor ?? { enabled: false, setEnabled: () => {} };
+  const modelMode = autoModel ?? { enabled: false, setEnabled: () => {} };
   pi.registerCommand("jev", {
     description: "Manage TypeSafe Jev integration (status, enable, disable, auto, test, skills)",
     handler: async (args: string, ctx: ExtensionCommandContext) => {
@@ -22,7 +31,7 @@ export function registerJevCommands(
       const sub = (tokens[0] ?? "").toLowerCase();
       const rest = tokens.slice(1).join(" ");
       const usage =
-        "Available options: /jev status, /jev skills [query], /jev test [prompt], /jev enable, /jev disable, /jev auto [on|off]";
+        "Available options: /jev status, /jev skills [query], /jev test [prompt], /jev enable, /jev disable, /jev auto [on|off], /jev auto-model [on|off], /jev compact [on|off], /jev auto-agents [on|off], /jev agents [task]";
 
       if (sub === "status" || sub === "") {
         const origin = jevClient.getKeyOrigin();
@@ -39,6 +48,9 @@ export function registerJevCommands(
             `• Requests in session: ${jevClient.stats.requestsCount}\n` +
             `• Total tokens used: ${jevClient.stats.totalTokens}\n` +
             `• Auto mode: ${auto.enabled ? "on" : "off"}${auto.enabled && !origin ? " (inactive: Jev unconfigured)" : ""}\n` +
+            `• Auto-model: ${modelMode.enabled ? "on" : "off"}\n` +
+            `• Jev compaction: ${compactMode.enabled ? "on" : "off"}\n` +
+            `• Agent orchestration: ${agentMode.enabled ? "on" : "off"}\n` +
             `• Active tools: ${activeTools.length} / Available: ${allTools.length} (${routable} routable)\n` +
             (jevClient.stats.lastError ? `• Last error: ${jevClient.stats.lastError}` : ""),
           "info"
@@ -147,6 +159,52 @@ export function registerJevCommands(
               : ""),
           res.fallbackUsed ? "warning" : "info"
         );
+        return;
+      }
+
+      if (sub === "agents" || sub === "orchestrate") {
+        if (!rest) {
+          ctx.ui.notify("Usage: /jev agents <task>", "warning");
+          return;
+        }
+        const result = await agentMode.dispatch(rest, ctx);
+        if (!result.accepted) ctx.ui.notify(`Agent orchestration unavailable: ${result.error ?? "unknown error"}`, "warning");
+        return;
+      }
+
+      if (sub === "compact") {
+        const arg = rest.toLowerCase();
+        if (arg !== "" && arg !== "on" && arg !== "off") {
+          ctx.ui.notify(`Unknown /jev compact argument "${rest}". ${usage}`, "warning");
+          return;
+        }
+        const enabled = arg === "on" ? true : arg === "off" ? false : !compactMode.enabled;
+        compactMode.setEnabled(enabled);
+        ctx.ui.notify(`Jev compaction ${enabled ? "enabled" : "disabled"}. Use /compact to run it.`, "info");
+        return;
+      }
+
+      if (sub === "auto-agents" || sub === "autoagents") {
+        const arg = rest.toLowerCase();
+        if (arg !== "" && arg !== "on" && arg !== "off") {
+          ctx.ui.notify(`Unknown /jev auto-agents argument "${rest}". ${usage}`, "warning");
+          return;
+        }
+        const enabled = arg === "on" ? true : arg === "off" ? false : !agentMode.enabled;
+        agentMode.setEnabled(enabled);
+        ctx.ui.notify(`Automatic agent orchestration ${enabled ? "enabled" : "disabled"}.`, "info");
+        return;
+      }
+
+      if (sub === "auto-model" || sub === "automodel") {
+        const arg = rest.toLowerCase();
+        if (arg !== "" && arg !== "on" && arg !== "off") {
+          ctx.ui.notify(`Unknown /jev auto-model argument "${rest}". ${usage}`, "warning");
+          return;
+        }
+        const enabled = arg === "on" ? true : arg === "off" ? false : !modelMode.enabled;
+        modelMode.setEnabled(enabled);
+        ctx.ui.notify(`Jev auto-model mode ${enabled ? "enabled" : "disabled"}.`, "info");
         return;
       }
 
