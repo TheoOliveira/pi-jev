@@ -120,9 +120,9 @@ export class ToolRouter {
     }
 
     if (fallbackUsed) {
-      for (const c of candidates.slice(0, 3)) {
-        activated.push(c.name);
-        probabilities[c.name] = 1.0;
+      // Fallback does not activate tools or claim certainty without Jev judgment
+      for (const c of candidates) {
+        probabilities[c.name] = 0;
       }
     }
 

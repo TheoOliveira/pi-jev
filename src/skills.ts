@@ -161,13 +161,19 @@ export class SkillRouter {
     }
 
     if (fallbackUsed) {
-      for (const c of candidates.slice(0, 3)) {
-        recommended.push({
-          name: c.name,
-          description: c.description,
-          location: c.location,
-          probability: 1.0,
-        });
+      // Fallback only includes candidates with matching terms, with 0 probability
+      const terms = query.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
+      for (const c of candidates) {
+        const text = `${c.name} ${c.description}`.toLowerCase();
+        const matches = terms.some((t) => text.includes(t));
+        if (matches) {
+          recommended.push({
+            name: c.name,
+            description: c.description,
+            location: c.location,
+            probability: 0,
+          });
+        }
       }
     }
 

@@ -23,7 +23,7 @@ test("SkillRouter shortlists skills based on query terms", () => {
   assert.equal(candidates[0].name, "resolving-merge-conflicts");
 });
 
-test("SkillRouter fallback returns top candidates with 1.0 probability", async () => {
+test("SkillRouter fallback returns matching keyword candidates with 0 probability", async () => {
   const mockSkills: SkillMetadata[] = [
     { name: "tdd", description: "Test-driven development" },
     { name: "accessibility", description: "Audit web accessibility" },
@@ -44,6 +44,7 @@ test("SkillRouter fallback returns top candidates with 1.0 probability", async (
 
   const res = await router.findSkills("make web accessible");
   assert.equal(res.fallbackUsed, true);
+  assert.equal(res.recommended.length, 1);
   assert.equal(res.recommended[0].name, "accessibility");
-  assert.equal(res.recommended[0].probability, 1.0);
+  assert.equal(res.recommended[0].probability, 0);
 });

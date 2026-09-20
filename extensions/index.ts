@@ -9,6 +9,7 @@ import { AutoModelRouter } from "../src/model-router.js";
 import { JevCompactor } from "../src/compact.js";
 import { AgentOrchestrator } from "../src/orchestrator.js";
 import { JevAgentHandler } from "../src/agent.js";
+import { ToolGuard } from "../src/tool-guard.js";
 
 function envAutoEnabledFor(name: string): boolean {
   const raw = process.env[name]?.trim().toLowerCase();
@@ -28,6 +29,12 @@ export default function (pi: ExtensionAPI) {
     description: "Enable explicit and automatic orchestration of available agents",
     type: "boolean",
     default: envAutoEnabledFor("PI_JEV_AGENTS"),
+  });
+
+  pi.registerFlag("jev-tool-guard", {
+    description: "Validate tool calls with Jev System One to prevent hallucinations",
+    type: "boolean",
+    default: envAutoEnabledFor("PI_JEV_TOOL_GUARD"),
   });
 
   pi.registerFlag("jev-compact", {
@@ -60,11 +67,14 @@ export default function (pi: ExtensionAPI) {
   const agents = new AgentOrchestrator(pi, jevClient, Boolean(pi.getFlag("jev-agents")));
   agents.installCompletionNotice();
 
+  const toolGuard = new ToolGuard(pi, jevClient, Boolean(pi.getFlag("jev-tool-guard")));
+  toolGuard.install();
+
   const agentHandler = new JevAgentHandler(pi, jevClient);
   agentHandler.install();
 
   registerJevTools(pi, jevClient, router, skillRouter);
-  registerJevCommands(pi, jevClient, router, skillRouter, auto, autoModel, compactor, agents);
+  registerJevCommands(pi, jevClient, router, skillRouter, auto, autoModel, compactor, agents, toolGuard);
 
   pi.on("session_start", (_event, ctx) => {
     if (!jevClient.isConfigured()) {

@@ -30,7 +30,7 @@ test("ToolRouter shortlists inactive tools correctly using local keywords", () =
   assert.equal(candidates[0].name, "docker_logs");
 });
 
-test("ToolRouter findAndActivate fallback when unconfigured activates top local candidates", async () => {
+test("ToolRouter findAndActivate fallback when unconfigured does not activate unjudged tools", async () => {
   const mockTools = [
     { name: "read", description: "Read files" },
     { name: "sqlite_query", description: "Query sqlite database" },
@@ -53,9 +53,9 @@ test("ToolRouter findAndActivate fallback when unconfigured activates top local 
 
   const result = await router.findAndActivate("run SQL query against sqlite");
   assert.equal(result.fallbackUsed, true);
-  assert.ok(result.activated.includes("sqlite_query"));
-  assert.ok(activeTools.includes("sqlite_query"));
-  assert.ok(activeTools.includes("read")); // preserves existing
+  assert.deepEqual(result.activated, []);
+  assert.equal(result.probabilities["sqlite_query"], 0);
+  assert.deepEqual(activeTools, ["read"]); // preserves existing without expanding
 });
 
 test("ToolRouter never offers its own jev tools as candidates", async () => {
@@ -86,7 +86,7 @@ test("ToolRouter never offers its own jev tools as candidates", async () => {
   assert.ok(!candidates.includes("jev_evaluate"));
 
   const result = await router.findAndActivate("evaluate skills and find tools");
-  assert.deepEqual(result.activated, ["sqlite_query"]);
+  assert.deepEqual(result.activated, []);
 });
 
 test("ToolRouter accepts a probability exactly at the shared threshold and rejects below it", async () => {
