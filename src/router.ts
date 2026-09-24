@@ -63,6 +63,13 @@ export class ToolRouter {
     return scored.slice(0, limit).map((s) => s.tool);
   }
 
+  public activateTools(tools: string[]): void {
+    if (tools.length === 0) return;
+    const currentActive = this.pi.getActiveTools();
+    const updated = Array.from(new Set([...currentActive, ...tools]));
+    this.pi.setActiveTools(updated);
+  }
+
   public async findAndActivate(
     query: string,
     threshold = JEV_THRESHOLD,
@@ -126,11 +133,7 @@ export class ToolRouter {
       }
     }
 
-    if (activated.length > 0) {
-      const currentActive = this.pi.getActiveTools();
-      const updated = Array.from(new Set([...currentActive, ...activated]));
-      this.pi.setActiveTools(updated);
-    }
+    this.activateTools(activated);
 
     return {
       query,

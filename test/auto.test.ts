@@ -7,32 +7,33 @@ import type { ToolRouter } from "../src/router.js";
 import type { SkillRouter } from "../src/skills.js";
 
 function stubs(configured = true) {
-  const calls: { tools: number; skills: number } = { tools: 0, skills: 0 };
-  const jevClient = { isConfigured: () => configured } as unknown as JevClient;
-  const router = {
-    findAndActivate: async (query: string, threshold?: number) => {
-      calls.tools += 1;
+  const calls: { evaluate: number; activate: number } = { evaluate: 0, activate: 0 };
+  const jevClient = {
+    isConfigured: () => configured,
+    evaluate: async (request: any) => {
+      calls.evaluate += 1;
+      assert.ok(request.questions["tool:docker_logs"]);
+      assert.ok(request.questions["skill:tdd"]);
       return {
-        query,
-        candidates: ["docker_logs"],
-        activated: ["docker_logs"],
-        probabilities: { docker_logs: 0.9 },
-        fallbackUsed: false,
+        answers: {
+          "tool:docker_logs": { type: "noul", value: 0.9 },
+          "skill:tdd": { type: "noul", value: 0.8 },
+        },
+        model: "test",
         elapsedMs: 1,
       };
+    },
+  } as unknown as JevClient;
+  const router = {
+    shortlist: () => [{ name: "docker_logs", description: "Docker logs" }],
+    activateTools: (tools: string[]) => {
+      calls.activate += 1;
+      assert.deepEqual(tools, ["docker_logs"]);
     },
   } as unknown as ToolRouter;
   const skillRouter = {
-    findSkills: async (query: string) => {
-      calls.skills += 1;
-      return {
-        query,
-        candidates: ["tdd"],
-        recommended: [{ name: "tdd", description: "Test driven", probability: 0.8 }],
-        fallbackUsed: false,
-        elapsedMs: 1,
-      };
-    },
+    getAvailableSkills: () => [{ name: "tdd", description: "Test driven" }],
+    shortlist: (skills: any[]) => skills,
   } as unknown as SkillRouter;
   return { jevClient, router, skillRouter, calls };
 }
@@ -44,8 +45,7 @@ test("AutoJev stays off until enabled", async () => {
   const result = await auto.route("inspect docker logs");
   assert.equal(result.ran, false);
   assert.equal(result.reason, "disabled");
-  assert.equal(calls.tools, 0);
-  assert.equal(calls.skills, 0);
+  assert.equal(calls.evaluate, 0);
 });
 
 test("AutoJev skips when Jev is unconfigured", async () => {
@@ -55,10 +55,10 @@ test("AutoJev skips when Jev is unconfigured", async () => {
   const result = await auto.route("inspect docker logs");
   assert.equal(result.ran, false);
   assert.equal(result.reason, "unconfigured");
-  assert.equal(calls.tools + calls.skills, 0);
+  assert.equal(calls.evaluate, 0);
 });
 
-test("AutoJev routes tools and skills for one prompt", async () => {
+test("AutoJev routes tools and skills with one Jev request per prompt", async () => {
   const { jevClient, router, skillRouter, calls } = stubs();
   const auto = new AutoJev(jevClient, router, skillRouter, true);
 
@@ -66,8 +66,8 @@ test("AutoJev routes tools and skills for one prompt", async () => {
   assert.equal(result.ran, true);
   assert.deepEqual(result.activated, ["docker_logs"]);
   assert.deepEqual(result.skills, [{ name: "tdd", probability: 0.8 }]);
-  assert.equal(calls.tools, 1);
-  assert.equal(calls.skills, 1);
+  assert.equal(calls.evaluate, 1);
+  assert.equal(calls.activate, 1);
 });
 
 test("AutoJev ignores slash commands and concurrent prompts, and never throws", async () => {
@@ -78,8 +78,8 @@ test("AutoJev ignores slash commands and concurrent prompts, and never throws", 
   assert.equal((await auto.route("   ")).reason, "empty-prompt");
 
   const failing = new AutoJev(
-    jevClient,
-    { findAndActivate: async () => { throw new Error("boom"); } } as unknown as ToolRouter,
+    { isConfigured: () => true, evaluate: async () => { throw new Error("boom"); } } as unknown as JevClient,
+    router,
     skillRouter,
     true
   );
@@ -91,9 +91,15 @@ test("AutoJev ignores slash commands and concurrent prompts, and never throws", 
   let release: () => void = () => {};
   const gate = new Promise<void>((resolve) => { release = resolve; });
   const slow = new AutoJev(
-    jevClient,
-    { findAndActivate: async () => { await gate; return { activated: [] }; } } as unknown as ToolRouter,
-    { findSkills: async () => ({ recommended: [] }) } as unknown as SkillRouter,
+    {
+      isConfigured: () => true,
+      evaluate: async () => {
+        await gate;
+        return { answers: {}, model: "test", elapsedMs: 1 };
+      },
+    } as unknown as JevClient,
+    { shortlist: () => [{ name: "slow_tool", description: "Slow" }], activateTools: () => {} } as unknown as ToolRouter,
+    { getAvailableSkills: () => [], shortlist: () => [] } as unknown as SkillRouter,
     true
   );
   const first = slow.route("first");
@@ -103,24 +109,39 @@ test("AutoJev ignores slash commands and concurrent prompts, and never throws", 
   assert.equal((await first).ran, true);
 });
 
-test("every Jev path shares one activation threshold", async () => {
-  // Auto mode must use the same cutoff as the router and command defaults.
-  const recorded: number[] = [];
-  const jevClient = { isConfigured: () => true } as unknown as JevClient;
+test("AutoJev uses shared activation threshold for tools and skills", async () => {
+  const jevClient = {
+    isConfigured: () => true,
+    evaluate: async () => ({
+      answers: {
+        "tool:at_cutoff": { type: "noul", value: JEV_THRESHOLD },
+        "tool:below_cutoff": { type: "noul", value: JEV_THRESHOLD - 0.01 },
+        "skill:at_cutoff": { type: "noul", value: JEV_THRESHOLD },
+        "skill:below_cutoff": { type: "noul", value: JEV_THRESHOLD - 0.01 },
+      },
+      model: "test",
+      elapsedMs: 1,
+    }),
+  } as unknown as JevClient;
 
-  const spyRouter = {
-    findAndActivate: async (_q: string, threshold?: number) => {
-      recorded.push(threshold ?? -1);
-      return { query: _q, candidates: [], activated: [], probabilities: {}, fallbackUsed: false, elapsedMs: 1 };
-    },
+  const activated: string[][] = [];
+  const router = {
+    shortlist: () => [
+      { name: "at_cutoff", description: "At cutoff" },
+      { name: "below_cutoff", description: "Below cutoff" },
+    ],
+    activateTools: (tools: string[]) => activated.push(tools),
   } as unknown as ToolRouter;
-  const spySkills = {
-    findSkills: async (_q: string, threshold?: number) => {
-      recorded.push(threshold ?? -1);
-      return { query: _q, candidates: [], recommended: [], fallbackUsed: false, elapsedMs: 1 };
-    },
+  const skillRouter = {
+    getAvailableSkills: () => [
+      { name: "at_cutoff", description: "At cutoff" },
+      { name: "below_cutoff", description: "Below cutoff" },
+    ],
+    shortlist: (skills: any[]) => skills,
   } as unknown as SkillRouter;
 
-  await new AutoJev(jevClient, spyRouter, spySkills, true).route("anything");
-  assert.deepEqual(recorded, [JEV_THRESHOLD, JEV_THRESHOLD]);
+  const result = await new AutoJev(jevClient, router, skillRouter, true).route("anything");
+  assert.deepEqual(result.activated, ["at_cutoff"]);
+  assert.deepEqual(result.skills, [{ name: "at_cutoff", probability: JEV_THRESHOLD }]);
+  assert.deepEqual(activated, [["at_cutoff"]]);
 });

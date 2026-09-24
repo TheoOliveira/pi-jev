@@ -3,6 +3,7 @@ import type { JevClient } from "./jev.js";
 import type { ToolRouter } from "./router.js";
 import type { SkillRouter } from "./skills.js";
 import { JEV_THRESHOLD } from "./skills.js";
+import type { QuestionConfig } from "./types.js";
 
 export type AutoSkipReason =
   | "disabled"
@@ -66,18 +67,59 @@ export class AutoJev {
 
     this.running = true;
     try {
-      const [tools, skills] = await Promise.all([
-        this.router.findAndActivate(prompt, JEV_THRESHOLD, signal),
-        this.skillRouter.findSkills(prompt, JEV_THRESHOLD, ctx, signal),
-      ]);
+      const toolCandidates = this.router.shortlist(prompt, 10);
+      const skillCandidates = this.skillRouter.shortlist(
+        this.skillRouter.getAvailableSkills(ctx),
+        prompt,
+        12
+      );
+      const questions: Record<string, QuestionConfig> = {};
+
+      for (const c of toolCandidates) {
+        questions[`tool:${c.name}`] = {
+          type: "noul",
+          instructions: `Does the tool '${c.name}' (${c.description || "no description"}) directly help accomplish this task: "${prompt}"?`,
+        };
+      }
+      for (const s of skillCandidates) {
+        questions[`skill:${s.name}`] = {
+          type: "noul",
+          instructions: `Does the skill '${s.name}' (${s.description}) provide direct guidance or specialized domain steps for this task: "${prompt}"?`,
+        };
+      }
+
+      const answers = Object.keys(questions).length === 0
+        ? {}
+        : (await this.jevClient.evaluate(
+            {
+              state: { task: prompt, tools: toolCandidates, available_skills: skillCandidates },
+              questions,
+            },
+            signal
+          )).answers;
+
+      const activated = toolCandidates
+        .filter((c) => {
+          const value = answers[`tool:${c.name}`]?.value;
+          return typeof value === "number" && value >= JEV_THRESHOLD;
+        })
+        .map((c) => c.name);
+      this.router.activateTools(activated);
+
+      const skills = skillCandidates
+        .map((s) => ({
+          name: s.name,
+          probability: answers[`skill:${s.name}`]?.value,
+        }))
+        .filter((s): s is { name: string; probability: number } =>
+          typeof s.probability === "number" && s.probability >= JEV_THRESHOLD
+        )
+        .sort((a, b) => b.probability - a.probability);
 
       return {
         ran: true,
-        activated: tools.activated,
-        skills: skills.recommended.map((s) => ({
-          name: s.name,
-          probability: s.probability,
-        })),
+        activated,
+        skills,
         elapsedMs: Date.now() - startTime,
       };
     } catch {
