@@ -61,3 +61,23 @@ test("JevClient reports explicit runtime key as in-session", () => {
 
   assert.equal(client.getKeyOrigin(), "set in-session");
 });
+
+test("JevClient lets non-empty runtime key override env key", () => {
+  process.env.TYPESAFE_API_KEY = "env-key";
+
+  const client = new JevClient();
+  client.setApiKey(" runtime-key ");
+
+  assert.equal(client.getKeyOrigin(), "set in-session");
+  assert.equal((client as any).getActiveApiKey().key, "runtime-key");
+});
+
+test("JevClient ignores empty runtime key and keeps env key", () => {
+  process.env.TYPESAFE_API_KEY = "env-key";
+
+  const client = new JevClient();
+  client.setApiKey("  ");
+
+  assert.equal(client.getKeyOrigin(), "$TYPESAFE_API_KEY");
+  assert.equal((client as any).getActiveApiKey().key, "env-key");
+});
