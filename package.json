@@ -1,6 +1,6 @@
 {
   "name": "pi-jev",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Semantic tool routing and typed System One decisions for the Pi coding agent using TypeSafe Jev",
   "type": "module",
   "main": "extensions/index.ts",
