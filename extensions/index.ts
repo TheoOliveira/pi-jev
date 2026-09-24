@@ -110,7 +110,7 @@ export default function (pi: ExtensionAPI) {
       await agents.dispatch(event.prompt, ctx, true);
     }
 
-    const modelResult = await autoModel.route(event.prompt, ctx, { hasImages: Boolean(event.images?.length) });
+    const modelResult = await autoModel.route(event.prompt, ctx, { hasImages: Boolean(event.images?.length), hasUrls: Boolean((event as any).urls?.length) });
     if (modelResult.changed) {
       ctx.ui.setStatus("jev", `jev: ${modelResult.profile} → ${modelResult.model?.id ?? "model"}`);
     }

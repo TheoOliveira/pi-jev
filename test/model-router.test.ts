@@ -10,6 +10,7 @@ const model = (id: string, extra: Record<string, unknown> = {}) => ({
 test("classifies model needs by task signals", () => {
   assert.equal(classifyModelNeed("plan a security decision").profile, "reasoning");
   assert.equal(classifyModelNeed("inspect this screenshot", 0, true).profile, "vision");
+  assert.equal(classifyModelNeed("review this URL", 0, false, true).profile, "url");
   assert.equal(classifyModelNeed("review the entire codebase").profile, "long-context");
   assert.equal(classifyModelNeed("hi, list files").profile, "fast");
 });
@@ -38,6 +39,20 @@ test("selects available model and skips unchanged selection", async () => {
   const unchanged = await router.route("plan a safe migration", ctx);
   assert.equal(unchanged.changed, false);
   assert.equal(selected, 1);
+});
+
+test("selects URL-capable model for URL input", async () => {
+  const textOnly = model("text-only");
+  const urlModel = model("opencode-zen", { input: ["text", "url"], contextWindow: 200000 });
+  const pi: any = { setModel: async () => {} };
+  const ctx: any = {
+    model: textOnly,
+    modelRegistry: { getAvailable: () => [textOnly, urlModel] },
+    getSystemPrompt: () => "",
+  };
+  const router = new AutoModelRouter(pi, true);
+  const result = await router.route("summarize this page", ctx, { hasUrls: true });
+  assert.equal(result.model?.id, "opencode-zen");
 });
 
 test("blocks quota model for future fallback", () => {
