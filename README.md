@@ -31,17 +31,22 @@ pi install git:github.com/TheoOliveira/pi-jev
 
 ## Setup
 
-`pi-jev` currently uses TypeSafe Jev for typed evaluations. Local/open models such as Laya can be used as Pi chat models, including with `/jev auto-model`, but they are not drop-in replacements for Jev because this package calls TypeSafe's System One API (`choice`, `noul`, and `score`) and expects those typed response shapes.
-
-To add a local backend later, the integration point is `src/jev.ts`: a replacement client must implement the same typed `evaluate` contract used by tool routing, skill discovery, compaction, gates, and `agent: "jev"`. No local adapter is shipped until a stable local API and calibration behavior are chosen.
-
 Set your TypeSafe API key via environment variable:
 
 ```bash
 export TYPESAFE_API_KEY=ts_...
 ```
 
-Or store it in Pi's secret store file:
+For Jev-compatible local servers or proxies, point `pi-jev` at a custom endpoint:
+
+```bash
+export PI_JEV_BASE_URL=http://localhost:8000
+# TYPESAFE_BASE_URL also works, but PI_JEV_BASE_URL wins.
+```
+
+Custom endpoints may omit `TYPESAFE_API_KEY`; `pi-jev` sends an empty key in that case for unauthenticated local servers such as Laya's `laya-serve`.
+
+Or store your TypeSafe key in Pi's secret store file:
 
 ```bash
 mkdir -p ~/.pi/agent/secrets

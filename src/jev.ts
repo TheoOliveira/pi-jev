@@ -12,6 +12,10 @@ import type {
 
 export type ApiKeySource = "env" | "file";
 
+export function resolveBaseURL(): string | null {
+  return process.env.PI_JEV_BASE_URL?.trim() || process.env.TYPESAFE_BASE_URL?.trim() || null;
+}
+
 /** Resolve the API key together with where it came from, for status reporting. */
 export function resolveApiKeySource(): { key: string; source: ApiKeySource; origin: string } | null {
   const envKey = process.env.TYPESAFE_API_KEY?.trim();
@@ -45,6 +49,7 @@ function resolveApiKey(): string | null {
 export class JevClient {
   private client: TypeSafeClient | null = null;
   private apiKey: string | null = null;
+  private baseURL: string | null = null;
   public stats: JevSessionStats = {
     requestsCount: 0,
     totalTokens: 0,
@@ -52,16 +57,21 @@ export class JevClient {
 
   constructor() {
     this.apiKey = resolveApiKey();
+    this.baseURL = resolveBaseURL();
   }
 
   public isConfigured(): boolean {
-    return Boolean(resolveApiKeySource() || this.apiKey);
+    return Boolean(resolveApiKeySource() || this.apiKey || this.getBaseURL());
   }
 
   /** Human-readable description of where the API key came from, or null when unconfigured. */
   public getKeyOrigin(): string | null {
     if (this.apiKey) return "set in-session";
     return resolveApiKeySource()?.origin ?? null;
+  }
+
+  public getBaseURL(): string | null {
+    return resolveBaseURL() || this.baseURL;
   }
 
   public setApiKey(key: string): void {
@@ -71,11 +81,12 @@ export class JevClient {
 
   private getClient(): TypeSafeClient {
     const key = resolveApiKey() || this.apiKey;
-    if (!key) {
-      throw new Error("Missing TYPESAFE_API_KEY. Set it in environment or ~/.pi/agent/secrets/typesafe_api_key.");
+    const baseURL = this.getBaseURL();
+    if (!key && !baseURL) {
+      throw new Error("Missing TYPESAFE_API_KEY. Set it in environment, ~/.pi/agent/secrets/typesafe_api_key, or set PI_JEV_BASE_URL for a compatible local endpoint.");
     }
     if (!this.client) {
-      this.client = new TypeSafeClient({ apiKey: key });
+      this.client = new TypeSafeClient({ apiKey: key ?? "", ...(baseURL ? { baseURL } : {}) });
     }
     return this.client;
   }
