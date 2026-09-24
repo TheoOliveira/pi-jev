@@ -5,7 +5,7 @@ import { SkillRouter } from "../src/skills.js";
 import { AutoJev } from "../src/auto.js";
 import { registerJevTools } from "../src/tools.js";
 import { registerJevCommands } from "../src/commands.js";
-import { AutoModelRouter } from "../src/model-router.js";
+import { AutoModelRouter, promptHasUrl } from "../src/model-router.js";
 import { JevCompactor } from "../src/compact.js";
 import { AgentOrchestrator } from "../src/orchestrator.js";
 import { JevAgentHandler } from "../src/agent.js";
@@ -110,7 +110,7 @@ export default function (pi: ExtensionAPI) {
       await agents.dispatch(event.prompt, ctx, true);
     }
 
-    const modelResult = await autoModel.route(event.prompt, ctx, { hasImages: Boolean(event.images?.length), hasUrls: Boolean((event as any).urls?.length) });
+    const modelResult = await autoModel.route(event.prompt, ctx, { hasImages: Boolean(event.images?.length), hasUrls: promptHasUrl(event.prompt) });
     if (modelResult.changed) {
       ctx.ui.setStatus("jev", `jev: ${modelResult.profile} → ${modelResult.model?.id ?? "model"}`);
     }
