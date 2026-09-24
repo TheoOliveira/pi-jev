@@ -2,13 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
-## Unreleased
-
-### Documentation
-- Clarify that local/open Pi chat models are not current Jev evaluator replacements and document `src/jev.ts` as the integration point for a future local backend.
-
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [0.6.0] - 2026-09-24
+
+### Added
+- Custom Jev-compatible endpoint support via `PI_JEV_BASE_URL` or `TYPESAFE_BASE_URL`, including unauthenticated local servers such as Laya `laya-serve`.
+- `/jev status` now shows the active Jev endpoint.
+- OpenCode Zen URL-aware model routing.
+
+### Fixed
+- `pi-jev-gate` runtime loading now works from package installs without dev dependencies in the caller cwd.
+- `/jev status` reports the real API key origin and counts SDK `input_tokens`/`output_tokens` usage.
+- `--jev-auto-model` and `--jev-agents` take effect independently of `/jev auto`.
+- `/jev auto` now sends one Jev request per prompt as documented.
+
 
 ## [0.5.0] - 2026-09-20
 

@@ -7,6 +7,7 @@ Semantic tool routing and typed decisions for the [Pi coding agent](https://pi.d
 - **Semantic Tool Router (`jev_find_tools`)**: Automatically searches registered inactive tools and additively activates only the tools needed for the user's specific prompt or workflow.
 - **Skill Discovery (`jev_find_skill`)**: Semantically matches and suggests the most relevant specialized agent skills (`SKILL.md`) for any task without cluttering prompt context.
 - **Typed Judgments (`jev_evaluate`)**: Run fast, calibrated System One decisions directly from the agent using Choice, Noul (yes/no probability), and Score primitives.
+- **Custom Jev Endpoint**: `PI_JEV_BASE_URL` / `TYPESAFE_BASE_URL` points the TypeSafe client at Jev-compatible local servers or proxies such as Laya `laya-serve`.
 - **Dynamic Evaluations (`/jev test <prompt>`)**: The active model designs the Jev question schema for a free-form prompt, then Jev evaluates it.
 - **Automatic Mode (opt-in)**: `--jev-auto` / `PI_JEV_AUTO=1` / `/jev auto on` routes tools and suggests skills before every prompt. Off by default.
 - **Automatic Model Mode (opt-in)**: `--jev-auto-model` / `PI_JEV_AUTO_MODEL=1` / `/jev auto-model on` selects fast, balanced, reasoning, long-context, or vision models per prompt. Off by default.
@@ -154,7 +155,7 @@ Auto-model uses task signals, attached images, and context size to choose the be
 
 ## Commands
 
-- `/jev status` — Shows Jev configuration (and where the API key came from), auto-mode state, session request count, total tokens, and available tool counts.
+- `/jev status` — Shows Jev configuration, endpoint, API key origin, auto-mode state, session request count, total tokens, and available tool counts.
 - `/jev help` — Lists available subcommands.
 - `/jev skills [query]` — Discover and rank matching skills in the workspace using Jev.
 - `/jev test [prompt]` — With no prompt, runs the fixed connectivity smoke test. With a prompt, the active model designs the Jev questions for that prompt and Jev evaluates them. Also accepts `/jev eval` and `/jev evaluate`.
