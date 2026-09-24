@@ -106,8 +106,6 @@ export default function (pi: ExtensionAPI) {
   });
 
   pi.on("before_agent_start", async (event, ctx) => {
-    if (!auto.enabled) return;
-
     if (agents.enabled && /\b(architecture|refactor|security review|entire repo|parallel|multiple agents|complex migration)\b/i.test(event.prompt)) {
       await agents.dispatch(event.prompt, ctx, true);
     }
@@ -116,6 +114,8 @@ export default function (pi: ExtensionAPI) {
     if (modelResult.changed) {
       ctx.ui.setStatus("jev", `jev: ${modelResult.profile} → ${modelResult.model?.id ?? "model"}`);
     }
+
+    if (!auto.enabled) return;
 
     const result = await auto.route(event.prompt, ctx, ctx.signal);
     if (!result.ran) return;

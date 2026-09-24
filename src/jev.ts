@@ -45,6 +45,7 @@ function resolveApiKey(): string | null {
 export class JevClient {
   private client: TypeSafeClient | null = null;
   private apiKey: string | null = null;
+  private apiKeySetInSession = false;
   public stats: JevSessionStats = {
     requestsCount: 0,
     totalTokens: 0,
@@ -60,12 +61,13 @@ export class JevClient {
 
   /** Human-readable description of where the API key came from, or null when unconfigured. */
   public getKeyOrigin(): string | null {
-    if (this.apiKey) return "set in-session";
+    if (this.apiKeySetInSession) return "set in-session";
     return resolveApiKeySource()?.origin ?? null;
   }
 
   public setApiKey(key: string): void {
     this.apiKey = key;
+    this.apiKeySetInSession = true;
     this.client = null;
   }
 
