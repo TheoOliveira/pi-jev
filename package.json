@@ -40,7 +40,8 @@
     "node": ">=20.0.0"
   },
   "dependencies": {
-    "@typesafe-ai/sdk": "^0.6.0"
+    "@typesafe-ai/sdk": "^0.6.0",
+    "tsx": "^4.19.0"
   },
   "peerDependencies": {
     "@earendil-works/pi-ai": "*",
@@ -53,7 +54,6 @@
     "@earendil-works/pi-coding-agent": "^0.85.0",
     "@earendil-works/pi-tui": "^0.85.0",
     "@types/node": "^22.0.0",
-    "tsx": "^4.19.0",
     "@sinclair/typebox": "^0.34.28",
     "typescript": "^5.7.0"
   },

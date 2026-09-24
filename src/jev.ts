@@ -49,6 +49,7 @@ function resolveApiKey(): string | null {
 export class JevClient {
   private client: TypeSafeClient | null = null;
   private apiKey: string | null = null;
+  private apiKeySetInSession = false;
   private baseURL: string | null = null;
   public stats: JevSessionStats = {
     requestsCount: 0,
@@ -66,7 +67,7 @@ export class JevClient {
 
   /** Human-readable description of where the API key came from, or null when unconfigured. */
   public getKeyOrigin(): string | null {
-    if (this.apiKey) return "set in-session";
+    if (this.apiKeySetInSession) return "set in-session";
     return resolveApiKeySource()?.origin ?? null;
   }
 
@@ -76,6 +77,7 @@ export class JevClient {
 
   public setApiKey(key: string): void {
     this.apiKey = key;
+    this.apiKeySetInSession = true;
     this.client = null;
   }
 
@@ -121,8 +123,8 @@ export class JevClient {
 
       const elapsedMs = Date.now() - startTime;
       this.stats.requestsCount += 1;
-      const tokens = response.usage?.totalTokens || 0;
-      this.stats.totalTokens += tokens;
+      const usage = response.usage;
+      this.stats.totalTokens += (usage?.input_tokens ?? 0) + (usage?.output_tokens ?? 0);
       this.stats.lastElapsedMs = elapsedMs;
 
       const answers: Record<string, JevAnswerResult> = {};
