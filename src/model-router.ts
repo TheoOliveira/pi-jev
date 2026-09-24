@@ -1,7 +1,7 @@
 import type { ExtensionContext, ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import type { Model } from "@earendil-works/pi-ai";
 
-export type ModelProfile = "fast" | "balanced" | "reasoning" | "long-context" | "vision";
+export type ModelProfile = "fast" | "balanced" | "reasoning" | "long-context" | "vision" | "url";
 export type ModelErrorKind = "quota" | "rate-limit" | "context-limit" | "unavailable" | "timeout" | "auth" | "unknown";
 
 export interface ModelRouteResult {
@@ -17,11 +17,13 @@ const PROFILE_HINTS: Record<ModelProfile, RegExp> = {
   reasoning: /\b(plan|planning|architect|architecture|debug|diagnos|compare|trade-?off|design|review|security|why|analy[sz]|complex|refactor)\b/i,
   "long-context": /\b(full repo|entire repo|large diff|long document|all files|context|migration|codebase|many files)\b/i,
   vision: /\b(image|screenshot|photo|diagram|visual|picture|ui mockup|wireframe)\b/i,
+  url: /\b(url|link|webpage|website|page|article)\b/i,
   balanced: /.*/,
 };
 
-export function classifyModelNeed(prompt: string, contextChars = 0, hasImages = false): { profile: ModelProfile; confidence: number; reason: string } {
+export function classifyModelNeed(prompt: string, contextChars = 0, hasImages = false, hasUrls = false): { profile: ModelProfile; confidence: number; reason: string } {
   if (hasImages || PROFILE_HINTS.vision.test(prompt)) return { profile: "vision", confidence: 0.95, reason: "image input or visual task" };
+  if (hasUrls || PROFILE_HINTS.url.test(prompt)) return { profile: "url", confidence: 0.9, reason: "URL input or web task" };
   if (contextChars > 120_000 || PROFILE_HINTS["long-context"].test(prompt)) return { profile: "long-context", confidence: 0.9, reason: "large context task" };
   if (PROFILE_HINTS.reasoning.test(prompt)) return { profile: "reasoning", confidence: 0.82, reason: "planning or deep reasoning task" };
   if (PROFILE_HINTS.fast.test(prompt) && prompt.length < 240) return { profile: "fast", confidence: 0.78, reason: "short simple task" };
@@ -39,12 +41,16 @@ export function classifyModelError(error: unknown): ModelErrorKind {
   return "unknown";
 }
 
-function modelScore(model: Model<any>, profile: ModelProfile, contextChars: number, hasImages: boolean): number {
-  const image = model.input?.includes("image") ? 4 : 0;
+function modelScore(model: Model<any>, profile: ModelProfile, contextChars: number, hasImages: boolean, hasUrls: boolean): number {
+  const input = model.input as readonly string[] | undefined;
+  const image = input?.includes("image") ? 4 : 0;
+  const url = input?.includes("url") ? 4 : 0;
   const reasoning = model.reasoning ? 3 : 0;
   const context = Math.min(model.contextWindow / 100_000, 5);
-  if (hasImages && !model.input?.includes("image")) return -100;
+  if (hasImages && !input?.includes("image")) return -100;
+  if (hasUrls && !input?.includes("url")) return -100;
   if (profile === "vision") return image * 10 + reasoning;
+  if (profile === "url") return url * 10 + context + reasoning;
   if (profile === "long-context") return context * 10 + image + reasoning;
   if (profile === "reasoning") return reasoning * 10 + context + image;
   if (profile === "fast") return (model.reasoning ? 0 : 3) + (model.cost?.input ?? 0) * -0.01;
@@ -72,7 +78,7 @@ export class AutoModelRouter {
     return kind;
   }
 
-  public async route(prompt: string, ctx: ExtensionContext, options: { hasImages?: boolean } = {}): Promise<ModelRouteResult> {
+  public async route(prompt: string, ctx: ExtensionContext, options: { hasImages?: boolean; hasUrls?: boolean } = {}): Promise<ModelRouteResult> {
     const current = ctx.model;
     const fallback: ModelRouteResult = { changed: false, profile: "balanced", reason: "model selection skipped" };
     if (!this.enabled) return { ...fallback, skipped: "disabled" };
@@ -82,13 +88,15 @@ export class AutoModelRouter {
     this.running = true;
     try {
       const contextChars = (ctx.getSystemPrompt?.() ?? "").length;
-      const need = classifyModelNeed(prompt, contextChars, Boolean(options.hasImages));
+      const hasImages = Boolean(options.hasImages);
+      const hasUrls = Boolean(options.hasUrls);
+      const need = classifyModelNeed(prompt, contextChars, hasImages, hasUrls);
       if (need.confidence < 0.6) return { ...fallback, profile: need.profile, reason: need.reason, skipped: "low-confidence" };
 
       const models = (ctx.scopedModels?.length ? ctx.scopedModels.map((x) => x.model) : ctx.modelRegistry.getAvailable())
         .filter((model) => !this.blocked.get(`${model.provider}/${model.id}`) || (this.blocked.get(`${model.provider}/${model.id}`) ?? 0) < Date.now());
-      const target = models.sort((a, b) => modelScore(b, need.profile, contextChars, Boolean(options.hasImages)) - modelScore(a, need.profile, contextChars, Boolean(options.hasImages)))[0];
-      if (!target) return { ...fallback, profile: need.profile, reason: "no compatible model", skipped: "no-model" };
+      const target = models.sort((a, b) => modelScore(b, need.profile, contextChars, hasImages, hasUrls) - modelScore(a, need.profile, contextChars, hasImages, hasUrls))[0];
+      if (!target || modelScore(target, need.profile, contextChars, hasImages, hasUrls) < 0) return { ...fallback, profile: need.profile, reason: "no compatible model", skipped: "no-model" };
       if (current?.provider === target.provider && current?.id === target.id) return { changed: false, profile: need.profile, model: target, reason: need.reason };
 
       try {
