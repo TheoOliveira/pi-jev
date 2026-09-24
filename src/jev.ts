@@ -112,8 +112,8 @@ export class JevClient {
 
       const elapsedMs = Date.now() - startTime;
       this.stats.requestsCount += 1;
-      const tokens = response.usage?.totalTokens || 0;
-      this.stats.totalTokens += tokens;
+      const usage = response.usage;
+      this.stats.totalTokens += (usage?.input_tokens ?? 0) + (usage?.output_tokens ?? 0);
       this.stats.lastElapsedMs = elapsedMs;
 
       const answers: Record<string, JevAnswerResult> = {};
