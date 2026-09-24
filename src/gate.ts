@@ -138,7 +138,7 @@ export async function evaluateGate(options: GateOptions, jevClient?: JevClient):
         error: "Jev unconfigured (fail-open enabled)",
       };
     }
-    throw new Error("TypeSafe Jev API key unconfigured. Set TYPESAFE_API_KEY.");
+    throw new Error("TypeSafe Jev unconfigured. Set TYPESAFE_API_KEY or PI_JEV_BASE_URL.");
   }
 
   const stateText = resolveGateState(options);

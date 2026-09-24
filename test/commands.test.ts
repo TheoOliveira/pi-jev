@@ -30,6 +30,7 @@ function harness(designed: unknown, answers: Record<string, any> = {}) {
   const jevClient = {
     isConfigured: () => true,
     getKeyOrigin: () => "~/.pi/agent/secrets/typesafe_api_key",
+    getBaseURL: () => "http://localhost:8000",
     stats: { requestsCount: 0, totalTokens: 0 },
     evaluate: async (request: any) => ({
       answers,
@@ -176,6 +177,7 @@ test("/jev status reports config origin and excludes own tools from the routable
 
   const status = calls.at(-1)!.message;
   assert.match(status, /Configured: Yes \(from ~\/\.pi\/agent\/secrets\/typesafe_api_key\)/);
+  assert.match(status, /Endpoint: http:\/\/localhost:8000/);
   // active: read. bash is routable; the three jev tools are ours and must not count.
   assert.match(status, /Active tools: 1 \/ Available: 5 \(1 routable\)/);
 });

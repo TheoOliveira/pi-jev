@@ -37,7 +37,16 @@ Set your TypeSafe API key via environment variable:
 export TYPESAFE_API_KEY=ts_...
 ```
 
-Or store it in Pi's secret store file:
+For Jev-compatible local servers or proxies, point `pi-jev` at a custom endpoint:
+
+```bash
+export PI_JEV_BASE_URL=http://localhost:8000
+# TYPESAFE_BASE_URL also works, but PI_JEV_BASE_URL wins.
+```
+
+Custom endpoints may omit `TYPESAFE_API_KEY`; `pi-jev` sends an empty key in that case for unauthenticated local servers such as Laya's `laya-serve`.
+
+Or store your TypeSafe key in Pi's secret store file:
 
 ```bash
 mkdir -p ~/.pi/agent/secrets
