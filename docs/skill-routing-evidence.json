@@ -1,0 +1,2325 @@
+{
+  "description": "Live Jev replay of the frozen fixtures in test/fixtures/skill-routing.ts. Calls share candidate selection and cutoff; only the per-skill question changes.",
+  "models": [
+    "jev-1.13.0"
+  ],
+  "threshold": 0.65,
+  "cases": [
+    {
+      "id": "reported-session-limit",
+      "legacy": [
+        {
+          "run": 1,
+          "probabilities": {
+            "typesafe-ai": 0.16,
+            "how": 0.24,
+            "ask-matt": 0.26,
+            "htmx-upgrade-from-htmx2": 0.02,
+            "maintain-verification-skill": 0.07,
+            "principle-build-the-lever": 0.19,
+            "principle-exhaust-the-design-space": 0.06,
+            "principle-model-the-domain": 0.12,
+            "prototype": 0.07,
+            "setup-pstack": 0.8,
+            "gstack-freeze": 0.04,
+            "gstack-unfreeze": 0.04
+          },
+          "recommended": [
+            "setup-pstack"
+          ],
+          "errors": [
+            "unexpected setup-pstack"
+          ]
+        },
+        {
+          "run": 2,
+          "probabilities": {
+            "typesafe-ai": 0.18,
+            "how": 0.24,
+            "ask-matt": 0.25,
+            "htmx-upgrade-from-htmx2": 0.02,
+            "maintain-verification-skill": 0.07,
+            "principle-build-the-lever": 0.18,
+            "principle-exhaust-the-design-space": 0.06,
+            "principle-model-the-domain": 0.12,
+            "prototype": 0.07,
+            "setup-pstack": 0.8,
+            "gstack-freeze": 0.04,
+            "gstack-unfreeze": 0.03
+          },
+          "recommended": [
+            "setup-pstack"
+          ],
+          "errors": [
+            "unexpected setup-pstack"
+          ]
+        },
+        {
+          "run": 3,
+          "probabilities": {
+            "typesafe-ai": 0.18,
+            "how": 0.22,
+            "ask-matt": 0.24,
+            "htmx-upgrade-from-htmx2": 0.01,
+            "maintain-verification-skill": 0.07,
+            "principle-build-the-lever": 0.19,
+            "principle-exhaust-the-design-space": 0.06,
+            "principle-model-the-domain": 0.12,
+            "prototype": 0.06,
+            "setup-pstack": 0.79,
+            "gstack-freeze": 0.04,
+            "gstack-unfreeze": 0.03
+          },
+          "recommended": [
+            "setup-pstack"
+          ],
+          "errors": [
+            "unexpected setup-pstack"
+          ]
+        }
+      ],
+      "scopeAware": [
+        {
+          "run": 1,
+          "probabilities": {
+            "typesafe-ai": 0.05,
+            "how": 0.08,
+            "ask-matt": 0.08,
+            "htmx-upgrade-from-htmx2": 0.01,
+            "maintain-verification-skill": 0.04,
+            "principle-build-the-lever": 0.06,
+            "principle-exhaust-the-design-space": 0.03,
+            "principle-model-the-domain": 0.03,
+            "prototype": 0.03,
+            "setup-pstack": 0.14,
+            "gstack-freeze": 0.04,
+            "gstack-unfreeze": 0.03
+          },
+          "recommended": [],
+          "errors": []
+        },
+        {
+          "run": 2,
+          "probabilities": {
+            "typesafe-ai": 0.06,
+            "how": 0.09,
+            "ask-matt": 0.08,
+            "htmx-upgrade-from-htmx2": 0.01,
+            "maintain-verification-skill": 0.05,
+            "principle-build-the-lever": 0.06,
+            "principle-exhaust-the-design-space": 0.03,
+            "principle-model-the-domain": 0.03,
+            "prototype": 0.03,
+            "setup-pstack": 0.16,
+            "gstack-freeze": 0.03,
+            "gstack-unfreeze": 0.03
+          },
+          "recommended": [],
+          "errors": []
+        },
+        {
+          "run": 3,
+          "probabilities": {
+            "typesafe-ai": 0.06,
+            "how": 0.09,
+            "ask-matt": 0.08,
+            "htmx-upgrade-from-htmx2": 0.01,
+            "maintain-verification-skill": 0.06,
+            "principle-build-the-lever": 0.07,
+            "principle-exhaust-the-design-space": 0.02,
+            "principle-model-the-domain": 0.03,
+            "prototype": 0.03,
+            "setup-pstack": 0.15,
+            "gstack-freeze": 0.04,
+            "gstack-unfreeze": 0.03
+          },
+          "recommended": [],
+          "errors": []
+        }
+      ],
+      "query": "model claude-fable-5 hit its session limit but still keeps being selected by the model router",
+      "candidates": [
+        "typesafe-ai",
+        "how",
+        "ask-matt",
+        "htmx-upgrade-from-htmx2",
+        "maintain-verification-skill",
+        "principle-build-the-lever",
+        "principle-exhaust-the-design-space",
+        "principle-model-the-domain",
+        "prototype",
+        "setup-pstack",
+        "gstack-freeze",
+        "gstack-unfreeze"
+      ]
+    },
+    {
+      "id": "explicit-router-bug",
+      "legacy": [
+        {
+          "run": 1,
+          "probabilities": {
+            "typesafe-ai": 0.21,
+            "ask-matt": 0.12,
+            "how": 0.29,
+            "principle-build-the-lever": 0.14,
+            "diagnosing-bugs": 0.59,
+            "htmx-upgrade-from-htmx2": 0.02,
+            "maintain-verification-skill": 0.06,
+            "principle-exhaust-the-design-space": 0.06,
+            "principle-model-the-domain": 0.17,
+            "prototype": 0.08,
+            "setup-pstack": 0.38,
+            "gstack-freeze": 0.05
+          },
+          "recommended": [],
+          "errors": []
+        },
+        {
+          "run": 2,
+          "probabilities": {
+            "typesafe-ai": 0.21,
+            "ask-matt": 0.13,
+            "how": 0.28,
+            "principle-build-the-lever": 0.14,
+            "diagnosing-bugs": 0.61,
+            "htmx-upgrade-from-htmx2": 0.02,
+            "maintain-verification-skill": 0.05,
+            "principle-exhaust-the-design-space": 0.05,
+            "principle-model-the-domain": 0.17,
+            "prototype": 0.08,
+            "setup-pstack": 0.33,
+            "gstack-freeze": 0.05
+          },
+          "recommended": [],
+          "errors": []
+        },
+        {
+          "run": 3,
+          "probabilities": {
+            "typesafe-ai": 0.2,
+            "ask-matt": 0.12,
+            "how": 0.29,
+            "principle-build-the-lever": 0.13,
+            "diagnosing-bugs": 0.59,
+            "htmx-upgrade-from-htmx2": 0.02,
+            "maintain-verification-skill": 0.06,
+            "principle-exhaust-the-design-space": 0.06,
+            "principle-model-the-domain": 0.16,
+            "prototype": 0.08,
+            "setup-pstack": 0.34,
+            "gstack-freeze": 0.06
+          },
+          "recommended": [],
+          "errors": []
+        }
+      ],
+      "scopeAware": [
+        {
+          "run": 1,
+          "probabilities": {
+            "typesafe-ai": 0.09,
+            "ask-matt": 0.06,
+            "how": 0.12,
+            "principle-build-the-lever": 0.06,
+            "diagnosing-bugs": 0.84,
+            "htmx-upgrade-from-htmx2": 0.02,
+            "maintain-verification-skill": 0.03,
+            "principle-exhaust-the-design-space": 0.03,
+            "principle-model-the-domain": 0.05,
+            "prototype": 0.04,
+            "setup-pstack": 0.14,
+            "gstack-freeze": 0.04
+          },
+          "recommended": [
+            "diagnosing-bugs"
+          ],
+          "errors": []
+        },
+        {
+          "run": 2,
+          "probabilities": {
+            "typesafe-ai": 0.09,
+            "ask-matt": 0.05,
+            "how": 0.12,
+            "principle-build-the-lever": 0.06,
+            "diagnosing-bugs": 0.85,
+            "htmx-upgrade-from-htmx2": 0.02,
+            "maintain-verification-skill": 0.03,
+            "principle-exhaust-the-design-space": 0.03,
+            "principle-model-the-domain": 0.05,
+            "prototype": 0.04,
+            "setup-pstack": 0.14,
+            "gstack-freeze": 0.03
+          },
+          "recommended": [
+            "diagnosing-bugs"
+          ],
+          "errors": []
+        },
+        {
+          "run": 3,
+          "probabilities": {
+            "typesafe-ai": 0.09,
+            "ask-matt": 0.06,
+            "how": 0.13,
+            "principle-build-the-lever": 0.06,
+            "diagnosing-bugs": 0.83,
+            "htmx-upgrade-from-htmx2": 0.02,
+            "maintain-verification-skill": 0.03,
+            "principle-exhaust-the-design-space": 0.03,
+            "principle-model-the-domain": 0.05,
+            "prototype": 0.04,
+            "setup-pstack": 0.14,
+            "gstack-freeze": 0.03
+          },
+          "recommended": [
+            "diagnosing-bugs"
+          ],
+          "errors": []
+        }
+      ],
+      "query": "Debug pi-jev: the model router keeps choosing Claude after its five-hour quota is exhausted",
+      "candidates": [
+        "typesafe-ai",
+        "ask-matt",
+        "how",
+        "principle-build-the-lever",
+        "diagnosing-bugs",
+        "htmx-upgrade-from-htmx2",
+        "maintain-verification-skill",
+        "principle-exhaust-the-design-space",
+        "principle-model-the-domain",
+        "prototype",
+        "setup-pstack",
+        "gstack-freeze"
+      ]
+    },
+    {
+      "id": "generic-model-selection",
+      "legacy": [
+        {
+          "run": 1,
+          "probabilities": {
+            "how": 0.28,
+            "typesafe-ai": 0.07,
+            "principle-model-the-domain": 0.11,
+            "prototype": 0.07,
+            "setup-pstack": 0.77,
+            "maintain-verification-skill": 0.06,
+            "principle-build-the-lever": 0.14,
+            "htmx-upgrade-from-htmx2": 0.02,
+            "principle-exhaust-the-design-space": 0.05,
+            "diagnosing-bugs": 0.37,
+            "frontend-design": 0.03,
+            "ask-matt": 0.17
+          },
+          "recommended": [
+            "setup-pstack"
+          ],
+          "errors": [
+            "unexpected setup-pstack"
+          ]
+        },
+        {
+          "run": 2,
+          "probabilities": {
+            "how": 0.26,
+            "typesafe-ai": 0.07,
+            "principle-model-the-domain": 0.11,
+            "prototype": 0.07,
+            "setup-pstack": 0.76,
+            "maintain-verification-skill": 0.06,
+            "principle-build-the-lever": 0.14,
+            "htmx-upgrade-from-htmx2": 0.02,
+            "principle-exhaust-the-design-space": 0.05,
+            "diagnosing-bugs": 0.36,
+            "frontend-design": 0.03,
+            "ask-matt": 0.17
+          },
+          "recommended": [
+            "setup-pstack"
+          ],
+          "errors": [
+            "unexpected setup-pstack"
+          ]
+        },
+        {
+          "run": 3,
+          "probabilities": {
+            "how": 0.28,
+            "typesafe-ai": 0.07,
+            "principle-model-the-domain": 0.11,
+            "prototype": 0.06,
+            "setup-pstack": 0.75,
+            "maintain-verification-skill": 0.06,
+            "principle-build-the-lever": 0.15,
+            "htmx-upgrade-from-htmx2": 0.02,
+            "principle-exhaust-the-design-space": 0.05,
+            "diagnosing-bugs": 0.38,
+            "frontend-design": 0.03,
+            "ask-matt": 0.16
+          },
+          "recommended": [
+            "setup-pstack"
+          ],
+          "errors": [
+            "unexpected setup-pstack"
+          ]
+        }
+      ],
+      "scopeAware": [
+        {
+          "run": 1,
+          "probabilities": {
+            "how": 0.19,
+            "typesafe-ai": 0.04,
+            "principle-model-the-domain": 0.05,
+            "prototype": 0.04,
+            "setup-pstack": 0.13,
+            "maintain-verification-skill": 0.05,
+            "principle-build-the-lever": 0.06,
+            "htmx-upgrade-from-htmx2": 0.02,
+            "principle-exhaust-the-design-space": 0.03,
+            "diagnosing-bugs": 0.48,
+            "frontend-design": 0.03,
+            "ask-matt": 0.11
+          },
+          "recommended": [],
+          "errors": []
+        },
+        {
+          "run": 2,
+          "probabilities": {
+            "how": 0.15,
+            "typesafe-ai": 0.04,
+            "principle-model-the-domain": 0.04,
+            "prototype": 0.04,
+            "setup-pstack": 0.16,
+            "maintain-verification-skill": 0.05,
+            "principle-build-the-lever": 0.05,
+            "htmx-upgrade-from-htmx2": 0.02,
+            "principle-exhaust-the-design-space": 0.03,
+            "diagnosing-bugs": 0.48,
+            "frontend-design": 0.03,
+            "ask-matt": 0.13
+          },
+          "recommended": [],
+          "errors": []
+        },
+        {
+          "run": 3,
+          "probabilities": {
+            "how": 0.21,
+            "typesafe-ai": 0.04,
+            "principle-model-the-domain": 0.05,
+            "prototype": 0.04,
+            "setup-pstack": 0.16,
+            "maintain-verification-skill": 0.05,
+            "principle-build-the-lever": 0.06,
+            "htmx-upgrade-from-htmx2": 0.02,
+            "principle-exhaust-the-design-space": 0.02,
+            "diagnosing-bugs": 0.51,
+            "frontend-design": 0.03,
+            "ask-matt": 0.13
+          },
+          "recommended": [],
+          "errors": []
+        }
+      ],
+      "query": "Why does the model selector keep using an unavailable model?",
+      "candidates": [
+        "how",
+        "typesafe-ai",
+        "principle-model-the-domain",
+        "prototype",
+        "setup-pstack",
+        "maintain-verification-skill",
+        "principle-build-the-lever",
+        "htmx-upgrade-from-htmx2",
+        "principle-exhaust-the-design-space",
+        "diagnosing-bugs",
+        "frontend-design",
+        "ask-matt"
+      ]
+    },
+    {
+      "id": "negated-pstack",
+      "legacy": [
+        {
+          "run": 1,
+          "probabilities": {
+            "typesafe-ai": 0.27,
+            "setup-pstack": 0.16,
+            "how": 0.19,
+            "htmx-upgrade-from-htmx2": 0.02,
+            "principle-build-the-lever": 0.19,
+            "principle-model-the-domain": 0.18,
+            "frontend-design": 0.02,
+            "ask-matt": 0.14,
+            "maintain-verification-skill": 0.06,
+            "principle-exhaust-the-design-space": 0.07,
+            "prototype": 0.08,
+            "gstack-freeze": 0.09
+          },
+          "recommended": [],
+          "errors": []
+        },
+        {
+          "run": 2,
+          "probabilities": {
+            "typesafe-ai": 0.28,
+            "setup-pstack": 0.15,
+            "how": 0.18,
+            "htmx-upgrade-from-htmx2": 0.02,
+            "principle-build-the-lever": 0.19,
+            "principle-model-the-domain": 0.17,
+            "frontend-design": 0.02,
+            "ask-matt": 0.15,
+            "maintain-verification-skill": 0.06,
+            "principle-exhaust-the-design-space": 0.06,
+            "prototype": 0.07,
+            "gstack-freeze": 0.09
+          },
+          "recommended": [],
+          "errors": []
+        },
+        {
+          "run": 3,
+          "probabilities": {
+            "typesafe-ai": 0.29,
+            "setup-pstack": 0.15,
+            "how": 0.18,
+            "htmx-upgrade-from-htmx2": 0.02,
+            "principle-build-the-lever": 0.19,
+            "principle-model-the-domain": 0.17,
+            "frontend-design": 0.02,
+            "ask-matt": 0.15,
+            "maintain-verification-skill": 0.06,
+            "principle-exhaust-the-design-space": 0.06,
+            "prototype": 0.07,
+            "gstack-freeze": 0.09
+          },
+          "recommended": [],
+          "errors": []
+        }
+      ],
+      "scopeAware": [
+        {
+          "run": 1,
+          "probabilities": {
+            "typesafe-ai": 0.42,
+            "setup-pstack": 0.06,
+            "how": 0.08,
+            "htmx-upgrade-from-htmx2": 0.02,
+            "principle-build-the-lever": 0.13,
+            "principle-model-the-domain": 0.09,
+            "frontend-design": 0.02,
+            "ask-matt": 0.07,
+            "maintain-verification-skill": 0.03,
+            "principle-exhaust-the-design-space": 0.04,
+            "prototype": 0.05,
+            "gstack-freeze": 0.04
+          },
+          "recommended": [],
+          "errors": []
+        },
+        {
+          "run": 2,
+          "probabilities": {
+            "typesafe-ai": 0.48,
+            "setup-pstack": 0.06,
+            "how": 0.08,
+            "htmx-upgrade-from-htmx2": 0.02,
+            "principle-build-the-lever": 0.13,
+            "principle-model-the-domain": 0.09,
+            "frontend-design": 0.02,
+            "ask-matt": 0.07,
+            "maintain-verification-skill": 0.03,
+            "principle-exhaust-the-design-space": 0.04,
+            "prototype": 0.04,
+            "gstack-freeze": 0.05
+          },
+          "recommended": [],
+          "errors": []
+        },
+        {
+          "run": 3,
+          "probabilities": {
+            "typesafe-ai": 0.45,
+            "setup-pstack": 0.06,
+            "how": 0.07,
+            "htmx-upgrade-from-htmx2": 0.02,
+            "principle-build-the-lever": 0.13,
+            "principle-model-the-domain": 0.09,
+            "frontend-design": 0.02,
+            "ask-matt": 0.07,
+            "maintain-verification-skill": 0.03,
+            "principle-exhaust-the-design-space": 0.05,
+            "prototype": 0.04,
+            "gstack-freeze": 0.05
+          },
+          "recommended": [],
+          "errors": []
+        }
+      ],
+      "query": "Do not configure pstack; fix pi-jev selecting rate-limited models",
+      "candidates": [
+        "typesafe-ai",
+        "setup-pstack",
+        "how",
+        "htmx-upgrade-from-htmx2",
+        "principle-build-the-lever",
+        "principle-model-the-domain",
+        "frontend-design",
+        "ask-matt",
+        "maintain-verification-skill",
+        "principle-exhaust-the-design-space",
+        "prototype",
+        "gstack-freeze"
+      ]
+    },
+    {
+      "id": "research-recommendation",
+      "legacy": [
+        {
+          "run": 1,
+          "probabilities": {
+            "typesafe-ai": 0.28,
+            "frontend-design": 0.03,
+            "principle-build-the-lever": 0.22,
+            "principle-exhaust-the-design-space": 0.09,
+            "setup-pstack": 0.16,
+            "how": 0.33,
+            "ask-matt": 0.2,
+            "maintain-verification-skill": 0.11,
+            "gstack-freeze": 0.07,
+            "gstack-unfreeze": 0.06,
+            "prototype": 0.1,
+            "diagnosing-bugs": 0.42
+          },
+          "recommended": [],
+          "errors": []
+        },
+        {
+          "run": 2,
+          "probabilities": {
+            "typesafe-ai": 0.3,
+            "frontend-design": 0.03,
+            "principle-build-the-lever": 0.22,
+            "principle-exhaust-the-design-space": 0.09,
+            "setup-pstack": 0.18,
+            "how": 0.37,
+            "ask-matt": 0.16,
+            "maintain-verification-skill": 0.11,
+            "gstack-freeze": 0.07,
+            "gstack-unfreeze": 0.05,
+            "prototype": 0.1,
+            "diagnosing-bugs": 0.43
+          },
+          "recommended": [],
+          "errors": []
+        },
+        {
+          "run": 3,
+          "probabilities": {
+            "typesafe-ai": 0.31,
+            "frontend-design": 0.03,
+            "principle-build-the-lever": 0.22,
+            "principle-exhaust-the-design-space": 0.09,
+            "setup-pstack": 0.17,
+            "how": 0.38,
+            "ask-matt": 0.18,
+            "maintain-verification-skill": 0.12,
+            "gstack-freeze": 0.07,
+            "gstack-unfreeze": 0.06,
+            "prototype": 0.1,
+            "diagnosing-bugs": 0.43
+          },
+          "recommended": [],
+          "errors": []
+        }
+      ],
+      "scopeAware": [
+        {
+          "run": 1,
+          "probabilities": {
+            "typesafe-ai": 0.33,
+            "frontend-design": 0.02,
+            "principle-build-the-lever": 0.13,
+            "principle-exhaust-the-design-space": 0.06,
+            "setup-pstack": 0.14,
+            "how": 0.21,
+            "ask-matt": 0.17,
+            "maintain-verification-skill": 0.12,
+            "gstack-freeze": 0.04,
+            "gstack-unfreeze": 0.08,
+            "prototype": 0.07,
+            "diagnosing-bugs": 0.52
+          },
+          "recommended": [],
+          "errors": []
+        },
+        {
+          "run": 2,
+          "probabilities": {
+            "typesafe-ai": 0.27,
+            "frontend-design": 0.02,
+            "principle-build-the-lever": 0.16,
+            "principle-exhaust-the-design-space": 0.06,
+            "setup-pstack": 0.16,
+            "how": 0.2,
+            "ask-matt": 0.23,
+            "maintain-verification-skill": 0.09,
+            "gstack-freeze": 0.05,
+            "gstack-unfreeze": 0.09,
+            "prototype": 0.07,
+            "diagnosing-bugs": 0.48
+          },
+          "recommended": [],
+          "errors": []
+        },
+        {
+          "run": 3,
+          "probabilities": {
+            "typesafe-ai": 0.33,
+            "frontend-design": 0.02,
+            "principle-build-the-lever": 0.13,
+            "principle-exhaust-the-design-space": 0.06,
+            "setup-pstack": 0.13,
+            "how": 0.17,
+            "ask-matt": 0.2,
+            "maintain-verification-skill": 0.1,
+            "gstack-freeze": 0.04,
+            "gstack-unfreeze": 0.08,
+            "prototype": 0.07,
+            "diagnosing-bugs": 0.46
+          },
+          "recommended": [],
+          "errors": []
+        }
+      ],
+      "query": "fully research jev matching /skill:setup-pstack and if it is deemed to be a router bug, fix it",
+      "candidates": [
+        "typesafe-ai",
+        "frontend-design",
+        "principle-build-the-lever",
+        "principle-exhaust-the-design-space",
+        "setup-pstack",
+        "how",
+        "ask-matt",
+        "maintain-verification-skill",
+        "gstack-freeze",
+        "gstack-unfreeze",
+        "prototype",
+        "diagnosing-bugs"
+      ]
+    },
+    {
+      "id": "quoted-name",
+      "legacy": [
+        {
+          "run": 1,
+          "probabilities": {
+            "setup-pstack": 0.33,
+            "how": 0.26,
+            "maintain-verification-skill": 0.03,
+            "principle-build-the-lever": 0.08,
+            "frontend-design": 0.02,
+            "typesafe-ai": 0.04,
+            "ask-matt": 0.15,
+            "principle-model-the-domain": 0.06,
+            "prototype": 0.05,
+            "gstack-unfreeze": 0.03,
+            "diagnosing-bugs": 0.06,
+            "htmx-upgrade-from-htmx2": 0.02
+          },
+          "recommended": [],
+          "errors": []
+        },
+        {
+          "run": 2,
+          "probabilities": {
+            "setup-pstack": 0.28,
+            "how": 0.24,
+            "maintain-verification-skill": 0.04,
+            "principle-build-the-lever": 0.09,
+            "frontend-design": 0.03,
+            "typesafe-ai": 0.04,
+            "ask-matt": 0.15,
+            "principle-model-the-domain": 0.06,
+            "prototype": 0.05,
+            "gstack-unfreeze": 0.02,
+            "diagnosing-bugs": 0.05,
+            "htmx-upgrade-from-htmx2": 0.02
+          },
+          "recommended": [],
+          "errors": []
+        },
+        {
+          "run": 3,
+          "probabilities": {
+            "setup-pstack": 0.31,
+            "how": 0.23,
+            "maintain-verification-skill": 0.04,
+            "principle-build-the-lever": 0.09,
+            "frontend-design": 0.02,
+            "typesafe-ai": 0.05,
+            "ask-matt": 0.15,
+            "principle-model-the-domain": 0.06,
+            "prototype": 0.04,
+            "gstack-unfreeze": 0.03,
+            "diagnosing-bugs": 0.06,
+            "htmx-upgrade-from-htmx2": 0.02
+          },
+          "recommended": [],
+          "errors": []
+        }
+      ],
+      "scopeAware": [
+        {
+          "run": 1,
+          "probabilities": {
+            "setup-pstack": 0.1,
+            "how": 0.1,
+            "maintain-verification-skill": 0.02,
+            "principle-build-the-lever": 0.04,
+            "frontend-design": 0.02,
+            "typesafe-ai": 0.02,
+            "ask-matt": 0.06,
+            "principle-model-the-domain": 0.03,
+            "prototype": 0.03,
+            "gstack-unfreeze": 0.03,
+            "diagnosing-bugs": 0.03,
+            "htmx-upgrade-from-htmx2": 0.02
+          },
+          "recommended": [],
+          "errors": []
+        },
+        {
+          "run": 2,
+          "probabilities": {
+            "setup-pstack": 0.08,
+            "how": 0.09,
+            "maintain-verification-skill": 0.03,
+            "principle-build-the-lever": 0.03,
+            "frontend-design": 0.02,
+            "typesafe-ai": 0.02,
+            "ask-matt": 0.07,
+            "principle-model-the-domain": 0.04,
+            "prototype": 0.02,
+            "gstack-unfreeze": 0.03,
+            "diagnosing-bugs": 0.03,
+            "htmx-upgrade-from-htmx2": 0.02
+          },
+          "recommended": [],
+          "errors": []
+        },
+        {
+          "run": 3,
+          "probabilities": {
+            "setup-pstack": 0.08,
+            "how": 0.1,
+            "maintain-verification-skill": 0.02,
+            "principle-build-the-lever": 0.04,
+            "frontend-design": 0.02,
+            "typesafe-ai": 0.02,
+            "ask-matt": 0.06,
+            "principle-model-the-domain": 0.03,
+            "prototype": 0.02,
+            "gstack-unfreeze": 0.02,
+            "diagnosing-bugs": 0.03,
+            "htmx-upgrade-from-htmx2": 0.02
+          },
+          "recommended": [],
+          "errors": []
+        }
+      ],
+      "query": "The log says \"setup-pstack\". Explain why that skill was matched.",
+      "candidates": [
+        "setup-pstack",
+        "how",
+        "maintain-verification-skill",
+        "principle-build-the-lever",
+        "frontend-design",
+        "typesafe-ai",
+        "ask-matt",
+        "principle-model-the-domain",
+        "prototype",
+        "gstack-unfreeze",
+        "diagnosing-bugs",
+        "htmx-upgrade-from-htmx2"
+      ]
+    },
+    {
+      "id": "configure-pstack",
+      "legacy": [
+        {
+          "run": 1,
+          "probabilities": {
+            "setup-pstack": 0.98,
+            "typesafe-ai": 0.03,
+            "how": 0.13,
+            "ask-matt": 0.14,
+            "htmx-upgrade-from-htmx2": 0.02,
+            "maintain-verification-skill": 0.03,
+            "principle-build-the-lever": 0.12,
+            "principle-exhaust-the-design-space": 0.06,
+            "principle-model-the-domain": 0.08,
+            "prototype": 0.04,
+            "gstack-freeze": 0.04,
+            "gstack-unfreeze": 0.03
+          },
+          "recommended": [
+            "setup-pstack"
+          ],
+          "errors": []
+        },
+        {
+          "run": 2,
+          "probabilities": {
+            "setup-pstack": 0.98,
+            "typesafe-ai": 0.03,
+            "how": 0.13,
+            "ask-matt": 0.15,
+            "htmx-upgrade-from-htmx2": 0.01,
+            "maintain-verification-skill": 0.03,
+            "principle-build-the-lever": 0.11,
+            "principle-exhaust-the-design-space": 0.06,
+            "principle-model-the-domain": 0.08,
+            "prototype": 0.05,
+            "gstack-freeze": 0.04,
+            "gstack-unfreeze": 0.03
+          },
+          "recommended": [
+            "setup-pstack"
+          ],
+          "errors": []
+        },
+        {
+          "run": 3,
+          "probabilities": {
+            "setup-pstack": 0.98,
+            "typesafe-ai": 0.03,
+            "how": 0.14,
+            "ask-matt": 0.14,
+            "htmx-upgrade-from-htmx2": 0.02,
+            "maintain-verification-skill": 0.04,
+            "principle-build-the-lever": 0.12,
+            "principle-exhaust-the-design-space": 0.05,
+            "principle-model-the-domain": 0.08,
+            "prototype": 0.04,
+            "gstack-freeze": 0.04,
+            "gstack-unfreeze": 0.03
+          },
+          "recommended": [
+            "setup-pstack"
+          ],
+          "errors": []
+        }
+      ],
+      "scopeAware": [
+        {
+          "run": 1,
+          "probabilities": {
+            "setup-pstack": 0.94,
+            "typesafe-ai": 0.02,
+            "how": 0.04,
+            "ask-matt": 0.05,
+            "htmx-upgrade-from-htmx2": 0.03,
+            "maintain-verification-skill": 0.02,
+            "principle-build-the-lever": 0.05,
+            "principle-exhaust-the-design-space": 0.03,
+            "principle-model-the-domain": 0.03,
+            "prototype": 0.04,
+            "gstack-freeze": 0.02,
+            "gstack-unfreeze": 0.02
+          },
+          "recommended": [
+            "setup-pstack"
+          ],
+          "errors": []
+        },
+        {
+          "run": 2,
+          "probabilities": {
+            "setup-pstack": 0.94,
+            "typesafe-ai": 0.02,
+            "how": 0.04,
+            "ask-matt": 0.06,
+            "htmx-upgrade-from-htmx2": 0.03,
+            "maintain-verification-skill": 0.02,
+            "principle-build-the-lever": 0.06,
+            "principle-exhaust-the-design-space": 0.03,
+            "principle-model-the-domain": 0.03,
+            "prototype": 0.03,
+            "gstack-freeze": 0.03,
+            "gstack-unfreeze": 0.02
+          },
+          "recommended": [
+            "setup-pstack"
+          ],
+          "errors": []
+        },
+        {
+          "run": 3,
+          "probabilities": {
+            "setup-pstack": 0.94,
+            "typesafe-ai": 0.02,
+            "how": 0.04,
+            "ask-matt": 0.05,
+            "htmx-upgrade-from-htmx2": 0.02,
+            "maintain-verification-skill": 0.02,
+            "principle-build-the-lever": 0.06,
+            "principle-exhaust-the-design-space": 0.03,
+            "principle-model-the-domain": 0.03,
+            "prototype": 0.03,
+            "gstack-freeze": 0.03,
+            "gstack-unfreeze": 0.02
+          },
+          "recommended": [
+            "setup-pstack"
+          ],
+          "errors": []
+        }
+      ],
+      "query": "configure pstack models",
+      "candidates": [
+        "setup-pstack",
+        "typesafe-ai",
+        "how",
+        "ask-matt",
+        "htmx-upgrade-from-htmx2",
+        "maintain-verification-skill",
+        "principle-build-the-lever",
+        "principle-exhaust-the-design-space",
+        "principle-model-the-domain",
+        "prototype",
+        "gstack-freeze",
+        "gstack-unfreeze"
+      ]
+    },
+    {
+      "id": "change-role-model",
+      "legacy": [
+        {
+          "run": 1,
+          "probabilities": {
+            "setup-pstack": 0.96,
+            "typesafe-ai": 0.03,
+            "prototype": 0.04,
+            "how": 0.15,
+            "htmx-upgrade-from-htmx2": 0.01,
+            "principle-model-the-domain": 0.05,
+            "principle-build-the-lever": 0.17,
+            "principle-exhaust-the-design-space": 0.04,
+            "gstack-freeze": 0.04,
+            "gstack-unfreeze": 0.03,
+            "diagnosing-bugs": 0.05,
+            "frontend-design": 0.02
+          },
+          "recommended": [
+            "setup-pstack"
+          ],
+          "errors": []
+        },
+        {
+          "run": 2,
+          "probabilities": {
+            "setup-pstack": 0.96,
+            "typesafe-ai": 0.04,
+            "prototype": 0.04,
+            "how": 0.15,
+            "htmx-upgrade-from-htmx2": 0.01,
+            "principle-model-the-domain": 0.05,
+            "principle-build-the-lever": 0.17,
+            "principle-exhaust-the-design-space": 0.04,
+            "gstack-freeze": 0.05,
+            "gstack-unfreeze": 0.03,
+            "diagnosing-bugs": 0.05,
+            "frontend-design": 0.02
+          },
+          "recommended": [
+            "setup-pstack"
+          ],
+          "errors": []
+        },
+        {
+          "run": 3,
+          "probabilities": {
+            "setup-pstack": 0.96,
+            "typesafe-ai": 0.03,
+            "prototype": 0.04,
+            "how": 0.15,
+            "htmx-upgrade-from-htmx2": 0.01,
+            "principle-model-the-domain": 0.05,
+            "principle-build-the-lever": 0.17,
+            "principle-exhaust-the-design-space": 0.04,
+            "gstack-freeze": 0.04,
+            "gstack-unfreeze": 0.03,
+            "diagnosing-bugs": 0.05,
+            "frontend-design": 0.02
+          },
+          "recommended": [
+            "setup-pstack"
+          ],
+          "errors": []
+        }
+      ],
+      "scopeAware": [
+        {
+          "run": 1,
+          "probabilities": {
+            "setup-pstack": 0.95,
+            "typesafe-ai": 0.01,
+            "prototype": 0.03,
+            "how": 0.04,
+            "htmx-upgrade-from-htmx2": 0.06,
+            "principle-model-the-domain": 0.04,
+            "principle-build-the-lever": 0.08,
+            "principle-exhaust-the-design-space": 0.06,
+            "gstack-freeze": 0.03,
+            "gstack-unfreeze": 0.04,
+            "diagnosing-bugs": 0.03,
+            "frontend-design": 0.01
+          },
+          "recommended": [
+            "setup-pstack"
+          ],
+          "errors": []
+        },
+        {
+          "run": 2,
+          "probabilities": {
+            "setup-pstack": 0.96,
+            "typesafe-ai": 0.02,
+            "prototype": 0.02,
+            "how": 0.05,
+            "htmx-upgrade-from-htmx2": 0.08,
+            "principle-model-the-domain": 0.06,
+            "principle-build-the-lever": 0.09,
+            "principle-exhaust-the-design-space": 0.05,
+            "gstack-freeze": 0.03,
+            "gstack-unfreeze": 0.04,
+            "diagnosing-bugs": 0.03,
+            "frontend-design": 0.01
+          },
+          "recommended": [
+            "setup-pstack"
+          ],
+          "errors": []
+        },
+        {
+          "run": 3,
+          "probabilities": {
+            "setup-pstack": 0.96,
+            "typesafe-ai": 0.02,
+            "prototype": 0.02,
+            "how": 0.05,
+            "htmx-upgrade-from-htmx2": 0.05,
+            "principle-model-the-domain": 0.04,
+            "principle-build-the-lever": 0.08,
+            "principle-exhaust-the-design-space": 0.06,
+            "gstack-freeze": 0.03,
+            "gstack-unfreeze": 0.04,
+            "diagnosing-bugs": 0.02,
+            "frontend-design": 0.01
+          },
+          "recommended": [
+            "setup-pstack"
+          ],
+          "errors": []
+        }
+      ],
+      "query": "change pstack's bug-fix model to a cheaper available model",
+      "candidates": [
+        "setup-pstack",
+        "typesafe-ai",
+        "prototype",
+        "how",
+        "htmx-upgrade-from-htmx2",
+        "principle-model-the-domain",
+        "principle-build-the-lever",
+        "principle-exhaust-the-design-space",
+        "gstack-freeze",
+        "gstack-unfreeze",
+        "diagnosing-bugs",
+        "frontend-design"
+      ]
+    },
+    {
+      "id": "explicit-workflow",
+      "legacy": [
+        {
+          "run": 1,
+          "probabilities": {
+            "setup-pstack": 0.96,
+            "typesafe-ai": 0.03,
+            "how": 0.1,
+            "htmx-upgrade-from-htmx2": 0.01,
+            "maintain-verification-skill": 0.02,
+            "prototype": 0.03,
+            "diagnosing-bugs": 0.03,
+            "frontend-design": 0.02,
+            "resolving-merge-conflicts": 0.02,
+            "ask-matt": 0.13,
+            "principle-build-the-lever": 0.1,
+            "principle-exhaust-the-design-space": 0.04
+          },
+          "recommended": [
+            "setup-pstack"
+          ],
+          "errors": []
+        },
+        {
+          "run": 2,
+          "probabilities": {
+            "setup-pstack": 0.96,
+            "typesafe-ai": 0.03,
+            "how": 0.1,
+            "htmx-upgrade-from-htmx2": 0.01,
+            "maintain-verification-skill": 0.03,
+            "prototype": 0.03,
+            "diagnosing-bugs": 0.03,
+            "frontend-design": 0.02,
+            "resolving-merge-conflicts": 0.02,
+            "ask-matt": 0.12,
+            "principle-build-the-lever": 0.09,
+            "principle-exhaust-the-design-space": 0.04
+          },
+          "recommended": [
+            "setup-pstack"
+          ],
+          "errors": []
+        },
+        {
+          "run": 3,
+          "probabilities": {
+            "setup-pstack": 0.96,
+            "typesafe-ai": 0.03,
+            "how": 0.11,
+            "htmx-upgrade-from-htmx2": 0.01,
+            "maintain-verification-skill": 0.02,
+            "prototype": 0.03,
+            "diagnosing-bugs": 0.03,
+            "frontend-design": 0.02,
+            "resolving-merge-conflicts": 0.02,
+            "ask-matt": 0.12,
+            "principle-build-the-lever": 0.11,
+            "principle-exhaust-the-design-space": 0.04
+          },
+          "recommended": [
+            "setup-pstack"
+          ],
+          "errors": []
+        }
+      ],
+      "scopeAware": [
+        {
+          "run": 1,
+          "probabilities": {
+            "setup-pstack": 0.95,
+            "typesafe-ai": 0.02,
+            "how": 0.04,
+            "htmx-upgrade-from-htmx2": 0.02,
+            "maintain-verification-skill": 0.06,
+            "prototype": 0.04,
+            "diagnosing-bugs": 0.02,
+            "frontend-design": 0.02,
+            "resolving-merge-conflicts": 0.02,
+            "ask-matt": 0.08,
+            "principle-build-the-lever": 0.06,
+            "principle-exhaust-the-design-space": 0.02
+          },
+          "recommended": [
+            "setup-pstack"
+          ],
+          "errors": []
+        },
+        {
+          "run": 2,
+          "probabilities": {
+            "setup-pstack": 0.95,
+            "typesafe-ai": 0.02,
+            "how": 0.04,
+            "htmx-upgrade-from-htmx2": 0.01,
+            "maintain-verification-skill": 0.06,
+            "prototype": 0.04,
+            "diagnosing-bugs": 0.03,
+            "frontend-design": 0.02,
+            "resolving-merge-conflicts": 0.02,
+            "ask-matt": 0.08,
+            "principle-build-the-lever": 0.06,
+            "principle-exhaust-the-design-space": 0.02
+          },
+          "recommended": [
+            "setup-pstack"
+          ],
+          "errors": []
+        },
+        {
+          "run": 3,
+          "probabilities": {
+            "setup-pstack": 0.95,
+            "typesafe-ai": 0.02,
+            "how": 0.04,
+            "htmx-upgrade-from-htmx2": 0.01,
+            "maintain-verification-skill": 0.08,
+            "prototype": 0.05,
+            "diagnosing-bugs": 0.03,
+            "frontend-design": 0.02,
+            "resolving-merge-conflicts": 0.02,
+            "ask-matt": 0.09,
+            "principle-build-the-lever": 0.06,
+            "principle-exhaust-the-design-space": 0.03
+          },
+          "recommended": [
+            "setup-pstack"
+          ],
+          "errors": []
+        }
+      ],
+      "query": "Use setup-pstack to configure which models pstack uses per role",
+      "candidates": [
+        "setup-pstack",
+        "typesafe-ai",
+        "how",
+        "htmx-upgrade-from-htmx2",
+        "maintain-verification-skill",
+        "prototype",
+        "diagnosing-bugs",
+        "frontend-design",
+        "resolving-merge-conflicts",
+        "ask-matt",
+        "principle-build-the-lever",
+        "principle-exhaust-the-design-space"
+      ]
+    },
+    {
+      "id": "pstack-limit-workaround",
+      "legacy": [
+        {
+          "run": 1,
+          "probabilities": {
+            "typesafe-ai": 0.04,
+            "prototype": 0.03,
+            "setup-pstack": 0.77,
+            "htmx-upgrade-from-htmx2": 0.01,
+            "gstack-unfreeze": 0.02,
+            "frontend-design": 0.02,
+            "resolving-merge-conflicts": 0.02,
+            "how": 0.08,
+            "principle-build-the-lever": 0.12,
+            "principle-exhaust-the-design-space": 0.04,
+            "principle-model-the-domain": 0.05,
+            "gstack-freeze": 0.02
+          },
+          "recommended": [
+            "setup-pstack"
+          ],
+          "errors": []
+        },
+        {
+          "run": 2,
+          "probabilities": {
+            "typesafe-ai": 0.04,
+            "prototype": 0.04,
+            "setup-pstack": 0.8,
+            "htmx-upgrade-from-htmx2": 0.01,
+            "gstack-unfreeze": 0.02,
+            "frontend-design": 0.02,
+            "resolving-merge-conflicts": 0.02,
+            "how": 0.09,
+            "principle-build-the-lever": 0.12,
+            "principle-exhaust-the-design-space": 0.04,
+            "principle-model-the-domain": 0.06,
+            "gstack-freeze": 0.03
+          },
+          "recommended": [
+            "setup-pstack"
+          ],
+          "errors": []
+        },
+        {
+          "run": 3,
+          "probabilities": {
+            "typesafe-ai": 0.04,
+            "prototype": 0.03,
+            "setup-pstack": 0.79,
+            "htmx-upgrade-from-htmx2": 0.01,
+            "gstack-unfreeze": 0.02,
+            "frontend-design": 0.02,
+            "resolving-merge-conflicts": 0.02,
+            "how": 0.08,
+            "principle-build-the-lever": 0.12,
+            "principle-exhaust-the-design-space": 0.04,
+            "principle-model-the-domain": 0.05,
+            "gstack-freeze": 0.02
+          },
+          "recommended": [
+            "setup-pstack"
+          ],
+          "errors": []
+        }
+      ],
+      "scopeAware": [
+        {
+          "run": 1,
+          "probabilities": {
+            "typesafe-ai": 0.02,
+            "prototype": 0.03,
+            "setup-pstack": 0.94,
+            "htmx-upgrade-from-htmx2": 0.03,
+            "gstack-unfreeze": 0.03,
+            "frontend-design": 0.01,
+            "resolving-merge-conflicts": 0.02,
+            "how": 0.04,
+            "principle-build-the-lever": 0.06,
+            "principle-exhaust-the-design-space": 0.06,
+            "principle-model-the-domain": 0.02,
+            "gstack-freeze": 0.03
+          },
+          "recommended": [
+            "setup-pstack"
+          ],
+          "errors": []
+        },
+        {
+          "run": 2,
+          "probabilities": {
+            "typesafe-ai": 0.02,
+            "prototype": 0.03,
+            "setup-pstack": 0.93,
+            "htmx-upgrade-from-htmx2": 0.05,
+            "gstack-unfreeze": 0.05,
+            "frontend-design": 0.01,
+            "resolving-merge-conflicts": 0.02,
+            "how": 0.04,
+            "principle-build-the-lever": 0.06,
+            "principle-exhaust-the-design-space": 0.06,
+            "principle-model-the-domain": 0.02,
+            "gstack-freeze": 0.03
+          },
+          "recommended": [
+            "setup-pstack"
+          ],
+          "errors": []
+        },
+        {
+          "run": 3,
+          "probabilities": {
+            "typesafe-ai": 0.02,
+            "prototype": 0.03,
+            "setup-pstack": 0.93,
+            "htmx-upgrade-from-htmx2": 0.05,
+            "gstack-unfreeze": 0.16,
+            "frontend-design": 0.01,
+            "resolving-merge-conflicts": 0.03,
+            "how": 0.04,
+            "principle-build-the-lever": 0.06,
+            "principle-exhaust-the-design-space": 0.05,
+            "principle-model-the-domain": 0.02,
+            "gstack-freeze": 0.03
+          },
+          "recommended": [
+            "setup-pstack"
+          ],
+          "errors": []
+        }
+      ],
+      "query": "Set pstack to use a different model when Claude hits its limit",
+      "candidates": [
+        "typesafe-ai",
+        "prototype",
+        "setup-pstack",
+        "htmx-upgrade-from-htmx2",
+        "gstack-unfreeze",
+        "frontend-design",
+        "resolving-merge-conflicts",
+        "how",
+        "principle-build-the-lever",
+        "principle-exhaust-the-design-space",
+        "principle-model-the-domain",
+        "gstack-freeze"
+      ]
+    },
+    {
+      "id": "greeting",
+      "legacy": [
+        {
+          "run": 1,
+          "probabilities": {
+            "typesafe-ai": 0.05,
+            "how": 0.04,
+            "ask-matt": 0.09,
+            "htmx-upgrade-from-htmx2": 0.02,
+            "maintain-verification-skill": 0.03,
+            "principle-build-the-lever": 0.04,
+            "principle-exhaust-the-design-space": 0.03,
+            "principle-model-the-domain": 0.03,
+            "prototype": 0.03,
+            "setup-pstack": 0.03,
+            "gstack-freeze": 0.03,
+            "gstack-unfreeze": 0.03
+          },
+          "recommended": [],
+          "errors": []
+        },
+        {
+          "run": 2,
+          "probabilities": {
+            "typesafe-ai": 0.05,
+            "how": 0.04,
+            "ask-matt": 0.1,
+            "htmx-upgrade-from-htmx2": 0.02,
+            "maintain-verification-skill": 0.03,
+            "principle-build-the-lever": 0.04,
+            "principle-exhaust-the-design-space": 0.03,
+            "principle-model-the-domain": 0.03,
+            "prototype": 0.03,
+            "setup-pstack": 0.03,
+            "gstack-freeze": 0.03,
+            "gstack-unfreeze": 0.03
+          },
+          "recommended": [],
+          "errors": []
+        },
+        {
+          "run": 3,
+          "probabilities": {
+            "typesafe-ai": 0.05,
+            "how": 0.04,
+            "ask-matt": 0.1,
+            "htmx-upgrade-from-htmx2": 0.02,
+            "maintain-verification-skill": 0.03,
+            "principle-build-the-lever": 0.04,
+            "principle-exhaust-the-design-space": 0.03,
+            "principle-model-the-domain": 0.03,
+            "prototype": 0.03,
+            "setup-pstack": 0.03,
+            "gstack-freeze": 0.03,
+            "gstack-unfreeze": 0.03
+          },
+          "recommended": [],
+          "errors": []
+        }
+      ],
+      "scopeAware": [
+        {
+          "run": 1,
+          "probabilities": {
+            "typesafe-ai": 0.02,
+            "how": 0.01,
+            "ask-matt": 0.05,
+            "htmx-upgrade-from-htmx2": 0.01,
+            "maintain-verification-skill": 0.01,
+            "principle-build-the-lever": 0.01,
+            "principle-exhaust-the-design-space": 0.01,
+            "principle-model-the-domain": 0.02,
+            "prototype": 0.02,
+            "setup-pstack": 0.02,
+            "gstack-freeze": 0.02,
+            "gstack-unfreeze": 0.01
+          },
+          "recommended": [],
+          "errors": []
+        },
+        {
+          "run": 2,
+          "probabilities": {
+            "typesafe-ai": 0.02,
+            "how": 0.02,
+            "ask-matt": 0.04,
+            "htmx-upgrade-from-htmx2": 0.01,
+            "maintain-verification-skill": 0.01,
+            "principle-build-the-lever": 0.02,
+            "principle-exhaust-the-design-space": 0.01,
+            "principle-model-the-domain": 0.01,
+            "prototype": 0.02,
+            "setup-pstack": 0.02,
+            "gstack-freeze": 0.02,
+            "gstack-unfreeze": 0.01
+          },
+          "recommended": [],
+          "errors": []
+        },
+        {
+          "run": 3,
+          "probabilities": {
+            "typesafe-ai": 0.02,
+            "how": 0.01,
+            "ask-matt": 0.04,
+            "htmx-upgrade-from-htmx2": 0.01,
+            "maintain-verification-skill": 0.01,
+            "principle-build-the-lever": 0.02,
+            "principle-exhaust-the-design-space": 0.01,
+            "principle-model-the-domain": 0.02,
+            "prototype": 0.02,
+            "setup-pstack": 0.02,
+            "gstack-freeze": 0.02,
+            "gstack-unfreeze": 0.01
+          },
+          "recommended": [],
+          "errors": []
+        }
+      ],
+      "query": "hello",
+      "candidates": [
+        "typesafe-ai",
+        "how",
+        "ask-matt",
+        "htmx-upgrade-from-htmx2",
+        "maintain-verification-skill",
+        "principle-build-the-lever",
+        "principle-exhaust-the-design-space",
+        "principle-model-the-domain",
+        "prototype",
+        "setup-pstack",
+        "gstack-freeze",
+        "gstack-unfreeze"
+      ]
+    },
+    {
+      "id": "unrelated",
+      "legacy": [
+        {
+          "run": 1,
+          "probabilities": {
+            "typesafe-ai": 0.03,
+            "principle-build-the-lever": 0.03,
+            "how": 0.03,
+            "ask-matt": 0.06,
+            "maintain-verification-skill": 0.02,
+            "principle-exhaust-the-design-space": 0.01,
+            "principle-model-the-domain": 0.02,
+            "prototype": 0.02,
+            "diagnosing-bugs": 0.02,
+            "frontend-design": 0.01,
+            "htmx-upgrade-from-htmx2": 0.01,
+            "setup-pstack": 0.01
+          },
+          "recommended": [],
+          "errors": []
+        },
+        {
+          "run": 2,
+          "probabilities": {
+            "typesafe-ai": 0.03,
+            "principle-build-the-lever": 0.03,
+            "how": 0.03,
+            "ask-matt": 0.06,
+            "maintain-verification-skill": 0.02,
+            "principle-exhaust-the-design-space": 0.01,
+            "principle-model-the-domain": 0.02,
+            "prototype": 0.02,
+            "diagnosing-bugs": 0.02,
+            "frontend-design": 0.01,
+            "htmx-upgrade-from-htmx2": 0.01,
+            "setup-pstack": 0.01
+          },
+          "recommended": [],
+          "errors": []
+        },
+        {
+          "run": 3,
+          "probabilities": {
+            "typesafe-ai": 0.03,
+            "principle-build-the-lever": 0.03,
+            "how": 0.03,
+            "ask-matt": 0.06,
+            "maintain-verification-skill": 0.02,
+            "principle-exhaust-the-design-space": 0.02,
+            "principle-model-the-domain": 0.02,
+            "prototype": 0.02,
+            "diagnosing-bugs": 0.02,
+            "frontend-design": 0.01,
+            "htmx-upgrade-from-htmx2": 0.01,
+            "setup-pstack": 0.01
+          },
+          "recommended": [],
+          "errors": []
+        }
+      ],
+      "scopeAware": [
+        {
+          "run": 1,
+          "probabilities": {
+            "typesafe-ai": 0.01,
+            "principle-build-the-lever": 0.01,
+            "how": 0.01,
+            "ask-matt": 0.02,
+            "maintain-verification-skill": 0.01,
+            "principle-exhaust-the-design-space": 0.01,
+            "principle-model-the-domain": 0.01,
+            "prototype": 0.01,
+            "diagnosing-bugs": 0.01,
+            "frontend-design": 0.01,
+            "htmx-upgrade-from-htmx2": 0.01,
+            "setup-pstack": 0.01
+          },
+          "recommended": [],
+          "errors": []
+        },
+        {
+          "run": 2,
+          "probabilities": {
+            "typesafe-ai": 0.01,
+            "principle-build-the-lever": 0.01,
+            "how": 0.01,
+            "ask-matt": 0.02,
+            "maintain-verification-skill": 0.01,
+            "principle-exhaust-the-design-space": 0.01,
+            "principle-model-the-domain": 0.01,
+            "prototype": 0.01,
+            "diagnosing-bugs": 0.01,
+            "frontend-design": 0.01,
+            "htmx-upgrade-from-htmx2": 0.01,
+            "setup-pstack": 0.01
+          },
+          "recommended": [],
+          "errors": []
+        },
+        {
+          "run": 3,
+          "probabilities": {
+            "typesafe-ai": 0.01,
+            "principle-build-the-lever": 0.01,
+            "how": 0.01,
+            "ask-matt": 0.02,
+            "maintain-verification-skill": 0.01,
+            "principle-exhaust-the-design-space": 0.01,
+            "principle-model-the-domain": 0.01,
+            "prototype": 0.01,
+            "diagnosing-bugs": 0.01,
+            "frontend-design": 0.01,
+            "htmx-upgrade-from-htmx2": 0.01,
+            "setup-pstack": 0.01
+          },
+          "recommended": [],
+          "errors": []
+        }
+      ],
+      "query": "What is the capital of France?",
+      "candidates": [
+        "typesafe-ai",
+        "principle-build-the-lever",
+        "how",
+        "ask-matt",
+        "maintain-verification-skill",
+        "principle-exhaust-the-design-space",
+        "principle-model-the-domain",
+        "prototype",
+        "diagnosing-bugs",
+        "frontend-design",
+        "htmx-upgrade-from-htmx2",
+        "setup-pstack"
+      ]
+    },
+    {
+      "id": "generic-debugging",
+      "legacy": [
+        {
+          "run": 1,
+          "probabilities": {
+            "diagnosing-bugs": 0.95,
+            "typesafe-ai": 0.06,
+            "how": 0.13,
+            "principle-build-the-lever": 0.13,
+            "principle-exhaust-the-design-space": 0.04,
+            "frontend-design": 0.03,
+            "ask-matt": 0.09,
+            "htmx-upgrade-from-htmx2": 0.07,
+            "maintain-verification-skill": 0.05,
+            "prototype": 0.05,
+            "setup-pstack": 0.03,
+            "principle-model-the-domain": 0.09
+          },
+          "recommended": [
+            "diagnosing-bugs"
+          ],
+          "errors": []
+        },
+        {
+          "run": 2,
+          "probabilities": {
+            "diagnosing-bugs": 0.95,
+            "typesafe-ai": 0.05,
+            "how": 0.13,
+            "principle-build-the-lever": 0.13,
+            "principle-exhaust-the-design-space": 0.04,
+            "frontend-design": 0.03,
+            "ask-matt": 0.09,
+            "htmx-upgrade-from-htmx2": 0.07,
+            "maintain-verification-skill": 0.05,
+            "prototype": 0.04,
+            "setup-pstack": 0.03,
+            "principle-model-the-domain": 0.09
+          },
+          "recommended": [
+            "diagnosing-bugs"
+          ],
+          "errors": []
+        },
+        {
+          "run": 3,
+          "probabilities": {
+            "diagnosing-bugs": 0.95,
+            "typesafe-ai": 0.06,
+            "how": 0.12,
+            "principle-build-the-lever": 0.12,
+            "principle-exhaust-the-design-space": 0.04,
+            "frontend-design": 0.03,
+            "ask-matt": 0.1,
+            "htmx-upgrade-from-htmx2": 0.06,
+            "maintain-verification-skill": 0.05,
+            "prototype": 0.04,
+            "setup-pstack": 0.03,
+            "principle-model-the-domain": 0.09
+          },
+          "recommended": [
+            "diagnosing-bugs"
+          ],
+          "errors": []
+        }
+      ],
+      "scopeAware": [
+        {
+          "run": 1,
+          "probabilities": {
+            "diagnosing-bugs": 0.9,
+            "typesafe-ai": 0.02,
+            "how": 0.04,
+            "principle-build-the-lever": 0.03,
+            "principle-exhaust-the-design-space": 0.02,
+            "frontend-design": 0.01,
+            "ask-matt": 0.03,
+            "htmx-upgrade-from-htmx2": 0.02,
+            "maintain-verification-skill": 0.02,
+            "prototype": 0.04,
+            "setup-pstack": 0.02,
+            "principle-model-the-domain": 0.02
+          },
+          "recommended": [
+            "diagnosing-bugs"
+          ],
+          "errors": []
+        },
+        {
+          "run": 2,
+          "probabilities": {
+            "diagnosing-bugs": 0.89,
+            "typesafe-ai": 0.01,
+            "how": 0.04,
+            "principle-build-the-lever": 0.03,
+            "principle-exhaust-the-design-space": 0.02,
+            "frontend-design": 0.01,
+            "ask-matt": 0.03,
+            "htmx-upgrade-from-htmx2": 0.02,
+            "maintain-verification-skill": 0.02,
+            "prototype": 0.03,
+            "setup-pstack": 0.02,
+            "principle-model-the-domain": 0.02
+          },
+          "recommended": [
+            "diagnosing-bugs"
+          ],
+          "errors": []
+        },
+        {
+          "run": 3,
+          "probabilities": {
+            "diagnosing-bugs": 0.88,
+            "typesafe-ai": 0.02,
+            "how": 0.04,
+            "principle-build-the-lever": 0.03,
+            "principle-exhaust-the-design-space": 0.02,
+            "frontend-design": 0.01,
+            "ask-matt": 0.03,
+            "htmx-upgrade-from-htmx2": 0.02,
+            "maintain-verification-skill": 0.02,
+            "prototype": 0.03,
+            "setup-pstack": 0.02,
+            "principle-model-the-domain": 0.02
+          },
+          "recommended": [
+            "diagnosing-bugs"
+          ],
+          "errors": []
+        }
+      ],
+      "query": "diagnose why the build is failing and debug the error",
+      "candidates": [
+        "diagnosing-bugs",
+        "typesafe-ai",
+        "how",
+        "principle-build-the-lever",
+        "principle-exhaust-the-design-space",
+        "frontend-design",
+        "ask-matt",
+        "htmx-upgrade-from-htmx2",
+        "maintain-verification-skill",
+        "prototype",
+        "setup-pstack",
+        "principle-model-the-domain"
+      ]
+    },
+    {
+      "id": "htmx-migration",
+      "legacy": [
+        {
+          "run": 1,
+          "probabilities": {
+            "htmx-upgrade-from-htmx2": 0.99,
+            "principle-exhaust-the-design-space": 0.06,
+            "typesafe-ai": 0.03,
+            "principle-build-the-lever": 0.15,
+            "frontend-design": 0.04,
+            "principle-model-the-domain": 0.1,
+            "prototype": 0.06,
+            "setup-pstack": 0.02,
+            "gstack-freeze": 0.04,
+            "gstack-unfreeze": 0.03,
+            "resolving-merge-conflicts": 0.03,
+            "how": 0.16
+          },
+          "recommended": [
+            "htmx-upgrade-from-htmx2"
+          ],
+          "errors": []
+        },
+        {
+          "run": 2,
+          "probabilities": {
+            "htmx-upgrade-from-htmx2": 0.99,
+            "principle-exhaust-the-design-space": 0.06,
+            "typesafe-ai": 0.03,
+            "principle-build-the-lever": 0.16,
+            "frontend-design": 0.04,
+            "principle-model-the-domain": 0.1,
+            "prototype": 0.06,
+            "setup-pstack": 0.02,
+            "gstack-freeze": 0.04,
+            "gstack-unfreeze": 0.03,
+            "resolving-merge-conflicts": 0.03,
+            "how": 0.17
+          },
+          "recommended": [
+            "htmx-upgrade-from-htmx2"
+          ],
+          "errors": []
+        },
+        {
+          "run": 3,
+          "probabilities": {
+            "htmx-upgrade-from-htmx2": 0.99,
+            "principle-exhaust-the-design-space": 0.06,
+            "typesafe-ai": 0.03,
+            "principle-build-the-lever": 0.15,
+            "frontend-design": 0.05,
+            "principle-model-the-domain": 0.09,
+            "prototype": 0.07,
+            "setup-pstack": 0.02,
+            "gstack-freeze": 0.04,
+            "gstack-unfreeze": 0.02,
+            "resolving-merge-conflicts": 0.03,
+            "how": 0.17
+          },
+          "recommended": [
+            "htmx-upgrade-from-htmx2"
+          ],
+          "errors": []
+        }
+      ],
+      "scopeAware": [
+        {
+          "run": 1,
+          "probabilities": {
+            "htmx-upgrade-from-htmx2": 0.98,
+            "principle-exhaust-the-design-space": 0.04,
+            "typesafe-ai": 0.01,
+            "principle-build-the-lever": 0.22,
+            "frontend-design": 0.05,
+            "principle-model-the-domain": 0.06,
+            "prototype": 0.04,
+            "setup-pstack": 0.04,
+            "gstack-freeze": 0.03,
+            "gstack-unfreeze": 0.05,
+            "resolving-merge-conflicts": 0.03,
+            "how": 0.05
+          },
+          "recommended": [
+            "htmx-upgrade-from-htmx2"
+          ],
+          "errors": []
+        },
+        {
+          "run": 2,
+          "probabilities": {
+            "htmx-upgrade-from-htmx2": 0.98,
+            "principle-exhaust-the-design-space": 0.04,
+            "typesafe-ai": 0.02,
+            "principle-build-the-lever": 0.21,
+            "frontend-design": 0.06,
+            "principle-model-the-domain": 0.05,
+            "prototype": 0.05,
+            "setup-pstack": 0.04,
+            "gstack-freeze": 0.03,
+            "gstack-unfreeze": 0.05,
+            "resolving-merge-conflicts": 0.03,
+            "how": 0.05
+          },
+          "recommended": [
+            "htmx-upgrade-from-htmx2"
+          ],
+          "errors": []
+        },
+        {
+          "run": 3,
+          "probabilities": {
+            "htmx-upgrade-from-htmx2": 0.98,
+            "principle-exhaust-the-design-space": 0.04,
+            "typesafe-ai": 0.02,
+            "principle-build-the-lever": 0.23,
+            "frontend-design": 0.05,
+            "principle-model-the-domain": 0.05,
+            "prototype": 0.04,
+            "setup-pstack": 0.04,
+            "gstack-freeze": 0.03,
+            "gstack-unfreeze": 0.06,
+            "resolving-merge-conflicts": 0.03,
+            "how": 0.05
+          },
+          "recommended": [
+            "htmx-upgrade-from-htmx2"
+          ],
+          "errors": []
+        }
+      ],
+      "query": "Upgrade my htmx 2 app to htmx 4",
+      "candidates": [
+        "htmx-upgrade-from-htmx2",
+        "principle-exhaust-the-design-space",
+        "typesafe-ai",
+        "principle-build-the-lever",
+        "frontend-design",
+        "principle-model-the-domain",
+        "prototype",
+        "setup-pstack",
+        "gstack-freeze",
+        "gstack-unfreeze",
+        "resolving-merge-conflicts",
+        "how"
+      ]
+    },
+    {
+      "id": "frontend-design",
+      "legacy": [
+        {
+          "run": 1,
+          "probabilities": {
+            "frontend-design": 0.96,
+            "principle-exhaust-the-design-space": 0.35,
+            "typesafe-ai": 0.1,
+            "how": 0.14,
+            "maintain-verification-skill": 0.03,
+            "principle-build-the-lever": 0.16,
+            "prototype": 0.28,
+            "setup-pstack": 0.03,
+            "gstack-freeze": 0.06,
+            "diagnosing-bugs": 0.04,
+            "ask-matt": 0.18,
+            "htmx-upgrade-from-htmx2": 0.04
+          },
+          "recommended": [
+            "frontend-design"
+          ],
+          "errors": []
+        },
+        {
+          "run": 2,
+          "probabilities": {
+            "frontend-design": 0.96,
+            "principle-exhaust-the-design-space": 0.35,
+            "typesafe-ai": 0.11,
+            "how": 0.13,
+            "maintain-verification-skill": 0.03,
+            "principle-build-the-lever": 0.15,
+            "prototype": 0.28,
+            "setup-pstack": 0.03,
+            "gstack-freeze": 0.06,
+            "diagnosing-bugs": 0.03,
+            "ask-matt": 0.16,
+            "htmx-upgrade-from-htmx2": 0.03
+          },
+          "recommended": [
+            "frontend-design"
+          ],
+          "errors": []
+        },
+        {
+          "run": 3,
+          "probabilities": {
+            "frontend-design": 0.96,
+            "principle-exhaust-the-design-space": 0.37,
+            "typesafe-ai": 0.11,
+            "how": 0.14,
+            "maintain-verification-skill": 0.03,
+            "principle-build-the-lever": 0.17,
+            "prototype": 0.28,
+            "setup-pstack": 0.03,
+            "gstack-freeze": 0.06,
+            "diagnosing-bugs": 0.03,
+            "ask-matt": 0.17,
+            "htmx-upgrade-from-htmx2": 0.03
+          },
+          "recommended": [
+            "frontend-design"
+          ],
+          "errors": []
+        }
+      ],
+      "scopeAware": [
+        {
+          "run": 1,
+          "probabilities": {
+            "frontend-design": 0.94,
+            "principle-exhaust-the-design-space": 0.08,
+            "typesafe-ai": 0.02,
+            "how": 0.02,
+            "maintain-verification-skill": 0.02,
+            "principle-build-the-lever": 0.04,
+            "prototype": 0.1,
+            "setup-pstack": 0.02,
+            "gstack-freeze": 0.02,
+            "diagnosing-bugs": 0.02,
+            "ask-matt": 0.02,
+            "htmx-upgrade-from-htmx2": 0.01
+          },
+          "recommended": [
+            "frontend-design"
+          ],
+          "errors": []
+        },
+        {
+          "run": 2,
+          "probabilities": {
+            "frontend-design": 0.94,
+            "principle-exhaust-the-design-space": 0.08,
+            "typesafe-ai": 0.02,
+            "how": 0.02,
+            "maintain-verification-skill": 0.02,
+            "principle-build-the-lever": 0.04,
+            "prototype": 0.1,
+            "setup-pstack": 0.02,
+            "gstack-freeze": 0.02,
+            "diagnosing-bugs": 0.02,
+            "ask-matt": 0.03,
+            "htmx-upgrade-from-htmx2": 0.01
+          },
+          "recommended": [
+            "frontend-design"
+          ],
+          "errors": []
+        },
+        {
+          "run": 3,
+          "probabilities": {
+            "frontend-design": 0.94,
+            "principle-exhaust-the-design-space": 0.08,
+            "typesafe-ai": 0.02,
+            "how": 0.02,
+            "maintain-verification-skill": 0.02,
+            "principle-build-the-lever": 0.04,
+            "prototype": 0.1,
+            "setup-pstack": 0.02,
+            "gstack-freeze": 0.02,
+            "diagnosing-bugs": 0.02,
+            "ask-matt": 0.02,
+            "htmx-upgrade-from-htmx2": 0.01
+          },
+          "recommended": [
+            "frontend-design"
+          ],
+          "errors": []
+        }
+      ],
+      "query": "Build a distinctive frontend landing page for my website",
+      "candidates": [
+        "frontend-design",
+        "principle-exhaust-the-design-space",
+        "typesafe-ai",
+        "how",
+        "maintain-verification-skill",
+        "principle-build-the-lever",
+        "prototype",
+        "setup-pstack",
+        "gstack-freeze",
+        "diagnosing-bugs",
+        "ask-matt",
+        "htmx-upgrade-from-htmx2"
+      ]
+    },
+    {
+      "id": "merge-conflict",
+      "legacy": [
+        {
+          "run": 1,
+          "probabilities": {
+            "resolving-merge-conflicts": 0.98,
+            "typesafe-ai": 0.03,
+            "how": 0.09,
+            "ask-matt": 0.11,
+            "htmx-upgrade-from-htmx2": 0.02,
+            "maintain-verification-skill": 0.03,
+            "principle-build-the-lever": 0.1,
+            "principle-exhaust-the-design-space": 0.03,
+            "principle-model-the-domain": 0.06,
+            "setup-pstack": 0.02,
+            "gstack-unfreeze": 0.05,
+            "diagnosing-bugs": 0.05
+          },
+          "recommended": [
+            "resolving-merge-conflicts"
+          ],
+          "errors": []
+        },
+        {
+          "run": 2,
+          "probabilities": {
+            "resolving-merge-conflicts": 0.98,
+            "typesafe-ai": 0.03,
+            "how": 0.1,
+            "ask-matt": 0.11,
+            "htmx-upgrade-from-htmx2": 0.02,
+            "maintain-verification-skill": 0.03,
+            "principle-build-the-lever": 0.11,
+            "principle-exhaust-the-design-space": 0.03,
+            "principle-model-the-domain": 0.06,
+            "setup-pstack": 0.02,
+            "gstack-unfreeze": 0.04,
+            "diagnosing-bugs": 0.06
+          },
+          "recommended": [
+            "resolving-merge-conflicts"
+          ],
+          "errors": []
+        },
+        {
+          "run": 3,
+          "probabilities": {
+            "resolving-merge-conflicts": 0.98,
+            "typesafe-ai": 0.03,
+            "how": 0.08,
+            "ask-matt": 0.1,
+            "htmx-upgrade-from-htmx2": 0.02,
+            "maintain-verification-skill": 0.03,
+            "principle-build-the-lever": 0.1,
+            "principle-exhaust-the-design-space": 0.03,
+            "principle-model-the-domain": 0.06,
+            "setup-pstack": 0.02,
+            "gstack-unfreeze": 0.05,
+            "diagnosing-bugs": 0.05
+          },
+          "recommended": [
+            "resolving-merge-conflicts"
+          ],
+          "errors": []
+        }
+      ],
+      "scopeAware": [
+        {
+          "run": 1,
+          "probabilities": {
+            "resolving-merge-conflicts": 0.96,
+            "typesafe-ai": 0.01,
+            "how": 0.04,
+            "ask-matt": 0.04,
+            "htmx-upgrade-from-htmx2": 0.02,
+            "maintain-verification-skill": 0.05,
+            "principle-build-the-lever": 0.06,
+            "principle-exhaust-the-design-space": 0.04,
+            "principle-model-the-domain": 0.03,
+            "setup-pstack": 0.03,
+            "gstack-unfreeze": 0.03,
+            "diagnosing-bugs": 0.03
+          },
+          "recommended": [
+            "resolving-merge-conflicts"
+          ],
+          "errors": []
+        },
+        {
+          "run": 2,
+          "probabilities": {
+            "resolving-merge-conflicts": 0.96,
+            "typesafe-ai": 0.01,
+            "how": 0.05,
+            "ask-matt": 0.03,
+            "htmx-upgrade-from-htmx2": 0.02,
+            "maintain-verification-skill": 0.05,
+            "principle-build-the-lever": 0.07,
+            "principle-exhaust-the-design-space": 0.03,
+            "principle-model-the-domain": 0.03,
+            "setup-pstack": 0.04,
+            "gstack-unfreeze": 0.03,
+            "diagnosing-bugs": 0.03
+          },
+          "recommended": [
+            "resolving-merge-conflicts"
+          ],
+          "errors": []
+        },
+        {
+          "run": 3,
+          "probabilities": {
+            "resolving-merge-conflicts": 0.96,
+            "typesafe-ai": 0.01,
+            "how": 0.04,
+            "ask-matt": 0.03,
+            "htmx-upgrade-from-htmx2": 0.03,
+            "maintain-verification-skill": 0.04,
+            "principle-build-the-lever": 0.06,
+            "principle-exhaust-the-design-space": 0.03,
+            "principle-model-the-domain": 0.03,
+            "setup-pstack": 0.03,
+            "gstack-unfreeze": 0.03,
+            "diagnosing-bugs": 0.03
+          },
+          "recommended": [
+            "resolving-merge-conflicts"
+          ],
+          "errors": []
+        }
+      ],
+      "query": "Resolve the in-progress git merge conflict",
+      "candidates": [
+        "resolving-merge-conflicts",
+        "typesafe-ai",
+        "how",
+        "ask-matt",
+        "htmx-upgrade-from-htmx2",
+        "maintain-verification-skill",
+        "principle-build-the-lever",
+        "principle-exhaust-the-design-space",
+        "principle-model-the-domain",
+        "setup-pstack",
+        "gstack-unfreeze",
+        "diagnosing-bugs"
+      ]
+    }
+  ],
+  "recordedAt": {
+    "legacy": "2026-09-25T21:06:58.386Z",
+    "scopeAware": "2026-09-25T21:06:29.390Z"
+  },
+  "summary": {
+    "legacy": {
+      "total": 48,
+      "failures": 6
+    },
+    "scopeAware": {
+      "total": 48,
+      "failures": 0
+    }
+  }
+}

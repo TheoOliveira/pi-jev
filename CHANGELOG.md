@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- **Skill matching checks requested activity and product scope rather than related topics.** The skill router no longer recommends `setup-pstack` for an exhausted-model routing bug in the live regression corpus, while retaining genuine pstack configuration matches. The shared 0.65 cutoff is unchanged. Added an opt-in live replay and the investigation/evidence in `docs/skill-routing-investigation.md`.
+
 ## [0.6.0] - 2026-09-24
 
 ### Added

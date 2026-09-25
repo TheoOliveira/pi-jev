@@ -145,3 +145,39 @@ test("AutoJev uses shared activation threshold for tools and skills", async () =
   assert.deepEqual(result.skills, [{ name: "at_cutoff", probability: JEV_THRESHOLD }]);
   assert.deepEqual(activated, [["at_cutoff"]]);
 });
+
+test("batched auto and explicit lookup use the same scope-aware skill question", async () => {
+  const { SkillRouter } = await import("../src/skills.js");
+  const { skills, cases } = await import("./fixtures/skill-routing.js");
+  const requests: import("../src/types.js").JevEvaluationRequest[] = [];
+  const jevClient: Pick<JevClient, "isConfigured" | "evaluate"> = {
+    isConfigured: () => true,
+    evaluate: async (request) => {
+      requests.push(request);
+      return { answers: {}, model: "fixture", elapsedMs: 0 };
+    },
+  };
+  const skillRouter = new SkillRouter({
+    getCommands: () => skills.map((s) => ({
+      name: `skill:${s.name}`, description: s.description, source: "skill",
+      sourceInfo: { path: `/fixtures/${s.name}/SKILL.md`, source: "fixture", scope: "user", origin: "top-level" },
+    })),
+  }, jevClient);
+  const query = cases[0].query;
+  const explicit = await skillRouter.findSkills(query);
+  const auto = new AutoJev(jevClient, {
+    shortlist: () => [{ name: "read", description: "Read files", parameters: {} }],
+    activateTools: () => {},
+  }, skillRouter, true);
+  const result = await auto.route(query);
+  assert.equal(result.ran, true);
+  assert.equal(requests.length, 2, "one request per route, even with both tools and skills");
+  const [directRequest, autoRequest] = requests;
+  assert.ok(autoRequest.questions["tool:read"]);
+  for (const name of explicit.candidates) {
+    assert.deepEqual(autoRequest.questions[`skill:${name}`], directRequest.questions[name]);
+    assert.match(autoRequest.questions[`skill:${name}`].instructions, /A shared topic is insufficient/);
+  }
+  assert.deepEqual(typeof directRequest.state === "object" && directRequest.state.available_skills,
+    typeof autoRequest.state === "object" && autoRequest.state.available_skills);
+});

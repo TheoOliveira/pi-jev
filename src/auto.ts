@@ -2,7 +2,7 @@ import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
 import type { JevClient } from "./jev.js";
 import type { ToolRouter } from "./router.js";
 import type { SkillRouter } from "./skills.js";
-import { JEV_THRESHOLD } from "./skills.js";
+import { JEV_THRESHOLD, skillApplicabilityQuestion } from "./skills.js";
 import type { QuestionConfig } from "./types.js";
 
 export type AutoSkipReason =
@@ -31,9 +31,9 @@ export class AutoJev {
   private running = false;
 
   constructor(
-    private jevClient: JevClient,
-    private router: ToolRouter,
-    private skillRouter: SkillRouter,
+    private jevClient: Pick<JevClient, "isConfigured" | "evaluate">,
+    private router: Pick<ToolRouter, "shortlist" | "activateTools">,
+    private skillRouter: Pick<SkillRouter, "getAvailableSkills" | "shortlist">,
     enabled = false
   ) {
     this.enabled = enabled;
@@ -81,11 +81,8 @@ export class AutoJev {
           instructions: `Does the tool '${c.name}' (${c.description || "no description"}) directly help accomplish this task: "${prompt}"?`,
         };
       }
-      for (const s of skillCandidates) {
-        questions[`skill:${s.name}`] = {
-          type: "noul",
-          instructions: `Does the skill '${s.name}' (${s.description}) provide direct guidance or specialized domain steps for this task: "${prompt}"?`,
-        };
+      for (const [index, s] of skillCandidates.entries()) {
+        questions[`skill:${s.name}`] = skillApplicabilityQuestion(index);
       }
 
       const answers = Object.keys(questions).length === 0

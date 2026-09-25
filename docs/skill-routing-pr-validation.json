@@ -1,0 +1,188 @@
+{
+  "base": "3c6d6c5",
+  "recordedAt": "2026-09-25T21:20:37.248Z",
+  "explicit": {
+    "total": 48,
+    "failures": 0,
+    "byCase": [
+      {
+        "id": "reported-session-limit",
+        "probabilities": [
+          0.15,
+          0.15,
+          0.13
+        ]
+      },
+      {
+        "id": "explicit-router-bug",
+        "probabilities": [
+          0.15,
+          0.13,
+          0.16
+        ]
+      },
+      {
+        "id": "generic-model-selection",
+        "probabilities": [
+          0.15,
+          0.21,
+          0.18
+        ]
+      },
+      {
+        "id": "negated-pstack",
+        "probabilities": [
+          0.06,
+          0.06,
+          0.06
+        ]
+      },
+      {
+        "id": "research-recommendation",
+        "probabilities": [
+          0.3,
+          0.21,
+          0.22
+        ]
+      },
+      {
+        "id": "quoted-name",
+        "probabilities": [
+          0.12,
+          0.1,
+          0.1
+        ]
+      },
+      {
+        "id": "configure-pstack",
+        "probabilities": [
+          0.94,
+          0.94,
+          0.94
+        ]
+      },
+      {
+        "id": "change-role-model",
+        "probabilities": [
+          0.94,
+          0.95,
+          0.94
+        ]
+      },
+      {
+        "id": "explicit-workflow",
+        "probabilities": [
+          0.95,
+          0.96,
+          0.96
+        ]
+      },
+      {
+        "id": "pstack-limit-workaround",
+        "probabilities": [
+          0.93,
+          0.93,
+          0.93
+        ]
+      },
+      {
+        "id": "greeting",
+        "probabilities": [
+          0.02,
+          0.02,
+          0.02
+        ]
+      },
+      {
+        "id": "unrelated",
+        "probabilities": [
+          0.01,
+          0.01,
+          0.01
+        ]
+      },
+      {
+        "id": "generic-debugging",
+        "probabilities": [
+          0.02,
+          0.02,
+          0.02
+        ]
+      },
+      {
+        "id": "htmx-migration",
+        "probabilities": [
+          0.03,
+          0.04,
+          0.03
+        ]
+      },
+      {
+        "id": "frontend-design",
+        "probabilities": [
+          0.02,
+          0.02,
+          0.02
+        ]
+      },
+      {
+        "id": "merge-conflict",
+        "probabilities": [
+          0.03,
+          0.03,
+          0.03
+        ]
+      }
+    ]
+  },
+  "auto": [
+    {
+      "id": "reported-session-limit",
+      "model": "jev-1.13.0",
+      "pstack": 0.15,
+      "recommended": [],
+      "pass": true
+    },
+    {
+      "id": "generic-model-selection",
+      "model": "jev-1.13.0",
+      "pstack": 0.14,
+      "recommended": [],
+      "pass": true
+    },
+    {
+      "id": "research-recommendation",
+      "model": "jev-1.13.0",
+      "pstack": 0.33,
+      "recommended": [],
+      "pass": true
+    },
+    {
+      "id": "configure-pstack",
+      "model": "jev-1.13.0",
+      "pstack": 0.93,
+      "recommended": [
+        "setup-pstack"
+      ],
+      "pass": true
+    },
+    {
+      "id": "change-role-model",
+      "model": "jev-1.13.0",
+      "pstack": 0.93,
+      "recommended": [
+        "setup-pstack"
+      ],
+      "pass": true
+    },
+    {
+      "id": "pstack-limit-workaround",
+      "model": "jev-1.13.0",
+      "pstack": 0.94,
+      "recommended": [
+        "setup-pstack"
+      ],
+      "pass": true
+    }
+  ]
+}
