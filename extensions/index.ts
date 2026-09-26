@@ -10,6 +10,7 @@ import { JevCompactor } from "../src/compact.js";
 import { AgentOrchestrator } from "../src/orchestrator.js";
 import { JevAgentHandler } from "../src/agent.js";
 import { ToolGuard } from "../src/tool-guard.js";
+import { AutoThinkingRouter } from "../src/thinking.js";
 
 function envAutoEnabledFor(name: string): boolean {
   const raw = process.env[name]?.trim().toLowerCase();
@@ -49,6 +50,13 @@ export default function (pi: ExtensionAPI) {
     default: envAutoEnabledFor("PI_JEV_AUTO_MODEL"),
   });
 
+  pi.registerFlag("jev-thinking", {
+    description:
+      "Classify each prompt and set the reasoning level (escalate for planning/debugging, de-escalate for short mechanical tasks) without changing the model",
+    type: "boolean",
+    default: envAutoEnabledFor("PI_JEV_THINKING"),
+  });
+
   pi.registerFlag("jev-auto", {
     description:
       "Automatically route Pi tools and suggest skills with Jev on every prompt (also via PI_JEV_AUTO=1)",
@@ -63,6 +71,7 @@ export default function (pi: ExtensionAPI) {
     Boolean(pi.getFlag("jev-auto"))
   );
   const autoModel = new AutoModelRouter(pi, Boolean(pi.getFlag("jev-auto-model")));
+  const autoThinking = new AutoThinkingRouter(pi, Boolean(pi.getFlag("jev-thinking")));
   const compactor = new JevCompactor(jevClient, Boolean(pi.getFlag("jev-compact")));
   const agents = new AgentOrchestrator(pi, jevClient, Boolean(pi.getFlag("jev-agents")));
   agents.installCompletionNotice();
@@ -74,7 +83,7 @@ export default function (pi: ExtensionAPI) {
   agentHandler.install();
 
   registerJevTools(pi, jevClient, router, skillRouter);
-  registerJevCommands(pi, jevClient, router, skillRouter, auto, autoModel, compactor, agents, toolGuard);
+  registerJevCommands(pi, jevClient, router, skillRouter, auto, autoModel, compactor, agents, toolGuard, autoThinking);
 
   pi.on("session_start", (_event, ctx) => {
     if (!jevClient.isConfigured()) {
@@ -105,6 +114,10 @@ export default function (pi: ExtensionAPI) {
     if (kind) ctx.ui.setStatus("jev", `jev: ${kind} → fallback next prompt`);
   });
 
+  pi.on("thinking_level_select", (event) => {
+    autoThinking.observe(event.level, event.previousLevel);
+  });
+
   pi.on("before_agent_start", async (event, ctx) => {
     if (agents.enabled && /\b(architecture|refactor|security review|entire repo|parallel|multiple agents|complex migration)\b/i.test(event.prompt)) {
       await agents.dispatch(event.prompt, ctx, true);
@@ -113,6 +126,11 @@ export default function (pi: ExtensionAPI) {
     const modelResult = await autoModel.route(event.prompt, ctx, { hasImages: Boolean(event.images?.length), hasUrls: Boolean((event as any).urls?.length) });
     if (modelResult.changed) {
       ctx.ui.setStatus("jev", `jev: ${modelResult.profile} → ${modelResult.model?.id ?? "model"}`);
+    }
+
+    const thinkingResult = await autoThinking.route(event.prompt, ctx);
+    if (thinkingResult.changed) {
+      ctx.ui.setStatus("jev", `jev: thinking ${thinkingResult.previous ?? "?"} → ${thinkingResult.level}`);
     }
 
     if (!auto.enabled) return;

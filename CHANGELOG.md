@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- Per-prompt reasoning-level control via `--jev-thinking` / `PI_JEV_THINKING=1` / `/jev thinking [on|off]`. Prompt intent escalates (`high`/`xhigh`) for planning, debugging, security, and review tasks and de-escalates (`minimal`) for short mechanical prompts. The model is never changed, so the prompt-cache identity stays fixed.
+- `/jev status` and `/jev` usage list the new thinking mode.
+
+### Notes
+- Budget-based Anthropic thinking (models without `compat.forceAdaptiveThinking`) is skipped: Pi derives `budget_tokens` from `max_tokens`, which is itself derived from the level, and Anthropic keys the message cache on `budget_tokens`. That claim comes from Pi's own source comment and is not verified against Anthropic's public documentation.
+
 ## [0.6.0] - 2026-09-24
 
 ### Added
