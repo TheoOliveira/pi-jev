@@ -18,6 +18,14 @@ export interface AutoRouteResult {
   activated: string[];
   skills: Array<{ name: string; probability: number }>;
   elapsedMs: number;
+  /** Set when a model switch was decided as part of this batched request. */
+  modelConfidence?: number;
+}
+
+/** A pending model-switch judgment, contributed by the model router. */
+export interface ModelJudgmentContribution {
+  key: "model:switch";
+  instructions: string;
 }
 
 export { JEV_THRESHOLD };
@@ -38,6 +46,9 @@ export class AutoJev {
   ) {
     this.enabled = enabled;
   }
+
+  /** Extra Noul questions folded into the next batched request. */
+  public pendingQuestions: ModelJudgmentContribution[] = [];
 
   public setEnabled(enabled: boolean): void {
     this.enabled = enabled;
@@ -87,6 +98,10 @@ export class AutoJev {
           instructions: `Does the skill '${s.name}' (${s.description}) provide direct guidance or specialized domain steps for this task: "${prompt}"?`,
         };
       }
+      for (const q of this.pendingQuestions) {
+        questions[q.key] = { type: "noul", instructions: q.instructions };
+      }
+      this.pendingQuestions = [];
 
       const answers = Object.keys(questions).length === 0
         ? {}
@@ -97,6 +112,9 @@ export class AutoJev {
             },
             signal
           )).answers;
+
+      const modelValue = answers["model:switch"]?.value;
+      const modelConfidence = typeof modelValue === "number" ? modelValue : undefined;
 
       const activated = toolCandidates
         .filter((c) => {
@@ -120,6 +138,7 @@ export class AutoJev {
         ran: true,
         activated,
         skills,
+        modelConfidence,
         elapsedMs: Date.now() - startTime,
       };
     } catch {
