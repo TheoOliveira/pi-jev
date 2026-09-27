@@ -1,5 +1,6 @@
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import type { Model } from "@earendil-works/pi-ai";
+import { clampThinkingLevel, getSupportedThinkingLevels } from "@earendil-works/pi-ai";
 
 /**
  * Reasoning-level control — per prompt, without changing the model.
@@ -61,15 +62,29 @@ export function classifyThinkingNeed(prompt: string): ThinkingNeed {
 }
 
 /**
- * Model capability check. `thinkingLevelMap` maps each level to a provider
- * value; `null` marks the level unsupported on that model.
+ * Model capability check.
+ *
+ * Delegates to Pi's own `getSupportedThinkingLevels` rather than re-deriving
+ * the rule. Pi's semantics are not what a naive reading of `thinkingLevelMap`
+ * suggests, and the catalogs use all three shapes:
+ *
+ * - a `null` value marks the level unsupported;
+ * - for `xhigh`/`max`, an **absent** key also means unsupported;
+ * - for every other level, an absent key means identity-mapped and supported;
+ * - a non-reasoning model supports only `off`.
+ *
+ * Reimplementing this produced 15 divergences against Pi in a spot check, so
+ * the check is delegated instead of duplicated.
  */
 export function isLevelSupported(model: Model<any> | undefined, level: ThinkingLevel): boolean {
   if (!model) return false;
-  const map = model.thinkingLevelMap;
-  if (!map) return true; // no map advertised: let Pi's own clamping decide
-  if (!(level in map)) return false;
-  return map[level as keyof typeof map] !== null;
+  return (getSupportedThinkingLevels(model) as string[]).includes(level);
+}
+
+/** The level Pi would actually apply, after clamping to model capability. */
+export function effectiveLevel(model: Model<any> | undefined, level: ThinkingLevel): ThinkingLevel {
+  if (!model) return "off";
+  return clampThinkingLevel(model, level) as ThinkingLevel;
 }
 
 /**
@@ -116,19 +131,23 @@ export class AutoThinkingRouter {
       const model = ctx.model;
       const previous = ctx.thinkingLevel;
 
-      if (!isLevelSupported(model, need.level)) {
+      // Ask for what the model can actually do. `setThinkingLevel` clamps too,
+      // but clamping here keeps the reported level and the cache-hostility check
+      // honest about what will really be applied.
+      const level = effectiveLevel(model, need.level);
+      if (!isLevelSupported(model, level)) {
         return { ...base, previous, skipped: "unsupported", reason: `model does not support thinking level "${need.level}"` };
       }
-      if (breaksCacheOnChange(model) && previous && previous !== need.level) {
-        return { ...base, previous, skipped: "cache-hostile", reason: "budget-based Anthropic thinking makes the level part of the cache key" };
+      if (breaksCacheOnChange(model) && previous && previous !== level) {
+        return { ...base, previous, level, skipped: "cache-hostile", reason: "budget-based Anthropic thinking makes the level part of the cache key" };
       }
-      if (previous === need.level) return { ...base, previous, skipped: "unchanged" };
+      if (previous === level) return { ...base, previous, level, skipped: "unchanged" };
 
       try {
-        this.pi.setThinkingLevel(need.level);
-        return { ...base, changed: true, previous };
+        this.pi.setThinkingLevel(level);
+        return { ...base, level, changed: true, previous };
       } catch (error) {
-        return { ...base, previous, skipped: "error", reason: `thinking level change failed: ${(error as any)?.message ?? error}` };
+        return { ...base, previous, level, skipped: "error", reason: `thinking level change failed: ${(error as any)?.message ?? error}` };
       }
     } finally {
       this.running = false;

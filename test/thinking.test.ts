@@ -1,9 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { getSupportedThinkingLevels } from "@earendil-works/pi-ai";
 import {
   AutoThinkingRouter,
   breaksCacheOnChange,
   classifyThinkingNeed,
+  effectiveLevel,
   isLevelSupported,
 } from "../src/thinking.js";
 
@@ -44,6 +46,42 @@ test("respects thinkingLevelMap null as unsupported", () => {
   assert.equal(isLevelSupported(m, "medium"), true);
 });
 
+test("matches pi's own capability rule, not a naive reading of the map", () => {
+  // Pi treats an ABSENT key as supported for off..high, but as UNSUPPORTED for
+  // xhigh/max. A non-reasoning model supports only "off". These are the exact
+  // cases a naive `!(level in map)` check gets wrong.
+  const cases = [
+    model({}),
+    model({ thinkingLevelMap: { off: null, minimal: null } }),
+    model({ thinkingLevelMap: { off: null, xhigh: "xhigh", max: "max" } }),
+    model({ reasoning: false }),
+  ];
+  for (const m of cases) {
+    const supported = new Set(getSupportedThinkingLevels(m) as string[]);
+    for (const level of ["off", "minimal", "low", "medium", "high", "xhigh", "max"] as const) {
+      assert.equal(
+        isLevelSupported(m, level),
+        supported.has(level),
+        `diverged from pi for ${level} on ${JSON.stringify(m.thinkingLevelMap)} (reasoning=${m.reasoning})`
+      );
+    }
+  }
+});
+
+test("absent xhigh/max keys stay unsupported while lower levels do not", () => {
+  const m = model({ thinkingLevelMap: { off: null } });
+  assert.equal(isLevelSupported(m, "medium"), true);
+  assert.equal(isLevelSupported(m, "xhigh"), false);
+  assert.equal(isLevelSupported(m, "max"), false);
+});
+
+test("effectiveLevel clamps to what pi would apply", () => {
+  const m = model({ thinkingLevelMap: { off: null, minimal: null } });
+  assert.equal(effectiveLevel(m, "minimal"), "low");
+  assert.equal(effectiveLevel(m, "medium"), "medium");
+  assert.equal(effectiveLevel(model({ reasoning: false }), "high"), "off");
+});
+
 test("treats budget-based Anthropic thinking as cache-hostile", () => {
   const budget = model({ api: "anthropic-messages", compat: {} });
   const adaptive = model({ api: "anthropic-messages", compat: { forceAdaptiveThinking: true } });
@@ -80,10 +118,22 @@ test("does not change level on budget-based Anthropic models", async () => {
   const pi: any = { setThinkingLevel: () => { set++; } };
   const ctx: any = { model: model({ api: "anthropic-messages", compat: {} }), thinkingLevel: "medium" };
   const router = new AutoThinkingRouter(pi, true);
-  const result = await router.route("plan a safe migration", ctx);
+  const result = await router.route("debug this failing test", ctx);
   assert.equal(result.changed, false);
   assert.equal(result.skipped, "cache-hostile");
   assert.equal(set, 0);
+});
+
+test("applies the clamped level, not the requested one", async () => {
+  let applied: string | undefined;
+  const pi: any = { setThinkingLevel: (l: string) => { applied = l; } };
+  // Model cannot do "minimal" or "high"; pi clamps them.
+  const m = model({ thinkingLevelMap: { off: null, minimal: null, high: null } });
+  const ctx: any = { model: m, thinkingLevel: "medium" };
+  const router = new AutoThinkingRouter(pi, true);
+  const result = await router.route("list files", ctx); // asks for minimal
+  assert.equal(result.changed, true);
+  assert.equal(applied, "low");
 });
 
 test("is inert when disabled", async () => {
