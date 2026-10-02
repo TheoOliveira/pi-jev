@@ -5,12 +5,12 @@ Semantic tool routing and typed decisions for the [Pi coding agent](https://pi.d
 ## Features
 
 - **Semantic Tool Router (`jev_find_tools`)**: Automatically searches registered inactive tools and additively activates only the tools needed for the user's specific prompt or workflow.
-- **Skill Discovery (`jev_find_skill`)**: Semantically matches and suggests the most relevant specialized agent skills (`SKILL.md`) for any task without cluttering prompt context.
+- **Skill Discovery (`jev_find_skill`)**: Semantically matches and suggests the most relevant specialized agent skills (`SKILL.md`) for any task without cluttering prompt context. Scope-aware matching avoids false positives from coincidental topic overlap.
 - **Typed Judgments (`jev_evaluate`)**: Run fast, calibrated System One decisions directly from the agent using Choice, Noul (yes/no probability), and Score primitives.
 - **Custom Jev Endpoint**: `PI_JEV_BASE_URL` / `TYPESAFE_BASE_URL` points the TypeSafe client at Jev-compatible local servers or proxies such as Laya `laya-serve`.
 - **Dynamic Evaluations (`/jev test <prompt>`)**: The active model designs the Jev question schema for a free-form prompt, then Jev evaluates it.
 - **Automatic Mode (opt-in)**: `--jev-auto` / `PI_JEV_AUTO=1` / `/jev auto on` routes tools and suggests skills before every prompt. Off by default.
-- **Automatic Model Mode (opt-in)**: `--jev-auto-model` / `PI_JEV_AUTO_MODEL=1` / `/jev auto-model on` selects fast, balanced, reasoning, long-context, or vision models per prompt. Off by default.
+- **Automatic Model Mode (opt-in)**: `--jev-auto-model` / `PI_JEV_AUTO_MODEL=1` / `/jev auto-model on` selects fast, balanced, reasoning, long-context, or vision/URL models per prompt. Scores candidates by capability fit with real prefix-aware cache cost as a tie-breaker. Off by default.
 - **Reasoning-Level Mode (opt-in)**: `--jev-thinking` / `PI_JEV_THINKING=1` / `/jev thinking on` sets the reasoning level per prompt (escalates for planning, debugging, and review; de-escalates for short mechanical tasks) without changing the model, so the prompt cache identity stays fixed. Off by default.
 - **Tool Call Guard (opt-in)**: `--jev-tool-guard` / `PI_JEV_TOOL_GUARD=1` / `/jev tool-guard on` intercepts tool calls with Jev to detect hallucinations and enhance failed results. Off by default.
 - **Jev Compaction (opt-in)**: `--jev-compact` / `PI_JEV_COMPACT=1` / `/jev compact on` uses Jev to retain important tool history during `/compact`, while Pi's normal compaction remains the safe fallback.
@@ -54,6 +54,8 @@ Or store your TypeSafe key in Pi's secret store file:
 mkdir -p ~/.pi/agent/secrets
 echo "ts_..." > ~/.pi/agent/secrets/typesafe_api_key
 ```
+
+When both session and environment keys exist, an explicit non-empty runtime key set in-session takes precedence and reports origin as `set in-session`, while empty session values safely fall back to the environment key.
 
 Then check status inside Pi:
 
@@ -152,7 +154,7 @@ Execution is asynchronous; completion is reported back into the session. Automat
 
 ### Automatic Model Mode
 
-Auto-model uses task signals, attached images, and context size to choose the best available model. It respects `ctx.scopedModels`, skips low-confidence general prompts, and preserves the current model when no compatible option exists. Models that hit quota, rate-limit, timeout, or context-limit errors are temporarily avoided on later prompts; fallback is bounded and never loops. Provider failures do not silently truncate user context. The decision granularity is unchanged: one decision per prompt.
+Auto-model uses task signals, raw URLs, attached images, and context size to choose the best available model. It automatically routes prompts containing URLs (via `promptHasUrl` detection) or URL tasks to URL-capable models. It respects `ctx.scopedModels`, skips low-confidence general prompts, and preserves the current model when no compatible option exists. Models that hit quota, rate-limit, timeout, or context-limit errors are temporarily avoided on later prompts; fallback is bounded and never loops. Provider failures do not silently truncate user context. The decision granularity is unchanged: one decision per prompt.
 
 #### How models are scored
 
@@ -164,6 +166,15 @@ Candidates are chosen by **capability, with cost as a tie-breaker**, using the m
 - When Jev is configured, one Noul judgment (“would switching to `<model>` help this task?”) gates the switch: the probability must clear `requiredConfidence(switchCost)`, so a cheap miss is worth roughly a coin-flip and an expensive one needs near-certainty. Jev supplies the probability, code owns the threshold. Without a Jev judgment, cost only breaks ties and no confidence is claimed.
 - That question is folded into the same request as tool and skill routing when `/jev auto` is enabled, keeping it one Jev request per prompt.
 - A model is not charged a miss for "switching" to itself, and hard input requirements (image/URL) are filtered out before any of this, so cost can never veto a capability the task requires.
+
+### Reasoning-Level Mode
+
+`/jev thinking on` (or `--jev-thinking` / `PI_JEV_THINKING=1`) provides per-prompt reasoning effort control without changing the active model:
+
+- Dynamically escalates reasoning level (`high` / `xhigh`) for planning, debugging, security, and architectural review tasks.
+- De-escalates to `minimal` for short mechanical edits and quick queries.
+- Because the model does not change, prompt cache identity remains intact.
+- Preserves native Pi behavior by skipping budget-based Anthropic models where `budget_tokens` alters cache identity.
 
 ## Commands
 
