@@ -10,6 +10,7 @@ import {
   modelStayCostUsd,
   modelSwitchCostUsd,
   FIT_TOLERANCE,
+  promptHasUrl,
   requiredConfidence,
   selectBestModel,
 } from "../src/model-router.js";
@@ -35,8 +36,16 @@ test("classifies model needs by task signals", () => {
   assert.equal(classifyModelNeed("plan a security decision").profile, "reasoning");
   assert.equal(classifyModelNeed("inspect this screenshot", 0, true).profile, "vision");
   assert.equal(classifyModelNeed("review this URL", 0, false, true).profile, "url");
+  assert.equal(classifyModelNeed("summarize https://example.com").profile, "url");
+  assert.equal(classifyModelNeed("open docs.example.com/path").profile, "url");
   assert.equal(classifyModelNeed("review the entire codebase").profile, "long-context");
   assert.equal(classifyModelNeed("hi, list files").profile, "fast");
+});
+
+test("detects URLs in prompt text", () => {
+  assert.equal(promptHasUrl("summarize https://example.com"), true);
+  assert.equal(promptHasUrl("summarize example.com/page"), true);
+  assert.equal(promptHasUrl("summarize this page"), false);
 });
 
 test("classifies provider limit errors", () => {
@@ -173,7 +182,7 @@ test("selects URL-capable model for URL input", async () => {
   const textOnly = model("text-only");
   const urlModel = model("opencode-zen", { input: ["text", "url"], contextWindow: 200000 });
   const ctx = ctxFor(textOnly, [textOnly, urlModel]);
-  const result = await new AutoModelRouter({ setModel: async () => {} } as any, true).route("summarize this page", ctx, { hasUrls: true });
+  const result = await new AutoModelRouter({ setModel: async () => {} } as any, true).route("summarize https://example.com", ctx);
   assert.equal(result.model?.id, "opencode-zen");
 });
 

@@ -212,7 +212,7 @@ export class AgentOrchestrator {
           source: { extension: "pi-jev" },
           params: {
             async: true,
-            workflowScript,
+            script: workflowScript,
           },
         });
       });
