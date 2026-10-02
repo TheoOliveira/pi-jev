@@ -11,6 +11,7 @@ import type {
 } from "./types.js";
 
 export type ApiKeySource = "env" | "file";
+type ActiveApiKey = { key: string; origin: string };
 
 export function resolveBaseURL(): string | null {
   return process.env.PI_JEV_BASE_URL?.trim() || process.env.TYPESAFE_BASE_URL?.trim() || null;
@@ -42,10 +43,6 @@ export function resolveApiKeySource(): { key: string; source: ApiKeySource; orig
   return null;
 }
 
-function resolveApiKey(): string | null {
-  return resolveApiKeySource()?.key ?? null;
-}
-
 export class JevClient {
   private client: TypeSafeClient | null = null;
   private apiKey: string | null = null;
@@ -57,7 +54,6 @@ export class JevClient {
   };
 
   constructor() {
-    this.apiKey = resolveApiKey();
     this.baseURL = resolveBaseURL();
   }
 
@@ -65,10 +61,16 @@ export class JevClient {
     return Boolean(resolveApiKeySource() || this.apiKey || this.getBaseURL());
   }
 
+  private getActiveApiKey(): ActiveApiKey | null {
+    const sessionKey = this.apiKey?.trim();
+    if (this.apiKeySetInSession && sessionKey) return { key: sessionKey, origin: "set in-session" };
+    const resolved = resolveApiKeySource();
+    return resolved ? { key: resolved.key, origin: resolved.origin } : null;
+  }
+
   /** Human-readable description of where the API key came from, or null when unconfigured. */
   public getKeyOrigin(): string | null {
-    if (this.apiKeySetInSession) return "set in-session";
-    return resolveApiKeySource()?.origin ?? null;
+    return this.getActiveApiKey()?.origin ?? null;
   }
 
   public getBaseURL(): string | null {
@@ -82,7 +84,7 @@ export class JevClient {
   }
 
   private getClient(): TypeSafeClient {
-    const key = resolveApiKey() || this.apiKey;
+    const key = this.getActiveApiKey()?.key ?? null;
     const baseURL = this.getBaseURL();
     if (!key && !baseURL) {
       throw new Error("Missing TYPESAFE_API_KEY. Set it in environment, ~/.pi/agent/secrets/typesafe_api_key, or set PI_JEV_BASE_URL for a compatible local endpoint.");
