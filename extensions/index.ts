@@ -70,7 +70,7 @@ export default function (pi: ExtensionAPI) {
     skillRouter,
     Boolean(pi.getFlag("jev-auto"))
   );
-  const autoModel = new AutoModelRouter(pi, Boolean(pi.getFlag("jev-auto-model")));
+  const autoModel = new AutoModelRouter(pi, Boolean(pi.getFlag("jev-auto-model")), jevClient);
   const autoThinking = new AutoThinkingRouter(pi, Boolean(pi.getFlag("jev-thinking")));
   const compactor = new JevCompactor(jevClient, Boolean(pi.getFlag("jev-compact")));
   const agents = new AgentOrchestrator(pi, jevClient, Boolean(pi.getFlag("jev-agents")));
@@ -123,19 +123,37 @@ export default function (pi: ExtensionAPI) {
       await agents.dispatch(event.prompt, ctx, true);
     }
 
-    const modelResult = await autoModel.route(event.prompt, ctx, { hasImages: Boolean(event.images?.length), hasUrls: promptHasUrl(event.prompt) });
-    if (modelResult.changed) {
-      ctx.ui.setStatus("jev", `jev: ${modelResult.profile} → ${modelResult.model?.id ?? "model"}`);
+    const routeOptions = { hasImages: Boolean(event.images?.length), hasUrls: promptHasUrl(event.prompt) || Boolean((event as any).urls?.length) };
+    const modelPlan = autoModel.plan(event.prompt, ctx, routeOptions);
+
+    // With auto-routing on, fold the model-switch question into the same Jev
+    // request so the prompt costs one round-trip instead of two.
+    if (!auto.enabled) {
+      const modelResult = modelPlan.plan
+        ? await autoModel.applyDecision(modelPlan.plan, await autoModel.judge(event.prompt, modelPlan.plan))
+        : modelPlan.result;
+      if (modelResult.changed) ctx.ui.setStatus("jev", `jev: ${modelResult.profile} → ${modelResult.model?.id ?? "model"}`);
+
+      const thinkingResult = await autoThinking.route(event.prompt, ctx);
+      if (thinkingResult.changed) {
+        ctx.ui.setStatus("jev", `jev: thinking ${thinkingResult.previous ?? "?"} → ${thinkingResult.level}`);
+      }
+      return;
     }
+
+    if (modelPlan.plan) auto.pendingQuestions = [{ key: modelPlan.plan.questionKey, instructions: modelPlan.plan.instructions }];
+    const result = await auto.route(event.prompt, ctx, ctx.signal);
+
+    const modelResult = modelPlan.plan
+      ? await autoModel.applyDecision(modelPlan.plan, result.modelConfidence)
+      : modelPlan.result;
+    if (modelResult.changed) ctx.ui.setStatus("jev", `jev: ${modelResult.profile} → ${modelResult.model?.id ?? "model"}`);
 
     const thinkingResult = await autoThinking.route(event.prompt, ctx);
     if (thinkingResult.changed) {
       ctx.ui.setStatus("jev", `jev: thinking ${thinkingResult.previous ?? "?"} → ${thinkingResult.level}`);
     }
 
-    if (!auto.enabled) return;
-
-    const result = await auto.route(event.prompt, ctx, ctx.signal);
     if (!result.ran) return;
 
     if (result.activated.length > 0) {

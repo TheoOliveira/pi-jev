@@ -146,6 +146,36 @@ test("AutoJev uses shared activation threshold for tools and skills", async () =
   assert.deepEqual(activated, [["at_cutoff"]]);
 });
 
+test("a pending model question rides along in the single routing request", async () => {
+  const seen: string[][] = [];
+  const jevClient = {
+    isConfigured: () => true,
+    evaluate: async (req: any) => {
+      seen.push(Object.keys(req.questions));
+      return { answers: { "model:switch": { type: "noul", value: 0.9 }, "tool:bash": { type: "noul", value: 0.9 } }, model: "m", elapsedMs: 1 };
+    },
+  } as any;
+  const pi: any = {
+    getActiveTools: () => ["read"],
+    getAllTools: () => [{ name: "bash" }, { name: "read" }, { name: "grep" }],
+    setActiveTools: () => {},
+    getAllSkills: () => [],
+    getCommands: () => [],
+  };
+  const { ToolRouter } = await import("../src/router.js");
+  const { SkillRouter } = await import("../src/skills.js");
+  const auto = new AutoJev(jevClient, new ToolRouter(pi, jevClient), new SkillRouter(pi, jevClient), true);
+  auto.pendingQuestions = [{ key: "model:switch", instructions: "Would switching help?" }];
+
+  const ctx: any = { model: {}, modelRegistry: { getAvailable: () => [] }, getSystemPrompt: () => "", getContextUsage: () => undefined, ui: { setStatus: () => {} } };
+  const result = await auto.route("debug this failing test", ctx);
+
+  assert.equal(seen.length, 1, "exactly one Jev request");
+  assert.ok(seen[0].includes("model:switch"), `batch should carry the model question, got ${seen[0]}`);
+  assert.equal(result.modelConfidence, 0.9);
+  assert.equal(auto.pendingQuestions.length, 0, "pending questions are consumed, not re-sent");
+});
+
 test("batched auto and explicit lookup use the same scope-aware skill question", async () => {
   const { SkillRouter } = await import("../src/skills.js");
   const { skills, cases } = await import("./fixtures/skill-routing.js");

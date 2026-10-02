@@ -152,7 +152,18 @@ Execution is asynchronous; completion is reported back into the session. Automat
 
 ### Automatic Model Mode
 
-Auto-model uses task signals, attached images, and context size to choose the best available model. It respects `ctx.scopedModels`, skips low-confidence general prompts, and preserves the current model when no compatible option exists. Models that hit quota, rate-limit, timeout, or context-limit errors are temporarily avoided on later prompts; fallback is bounded and never loops. Provider failures do not silently truncate user context.
+Auto-model uses task signals, attached images, and context size to choose the best available model. It respects `ctx.scopedModels`, skips low-confidence general prompts, and preserves the current model when no compatible option exists. Models that hit quota, rate-limit, timeout, or context-limit errors are temporarily avoided on later prompts; fallback is bounded and never loops. Provider failures do not silently truncate user context. The decision granularity is unchanged: one decision per prompt.
+
+#### How models are scored
+
+Candidates are chosen by **capability, with cost as a tie-breaker**, using the model's own rates (`cost.input`, `cost.cacheRead`, `cost.cacheWrite`) and the live prefix size from `ctx.getContextUsage().tokens`:
+
+- **Fit** is measured in arbitrary points. Only capabilities the task actually needs earn points — a multimodal model gains nothing on a text-only task.
+- **Switch cost** = `prefixTokens * (cost.input + cost.cacheWrite)` — a full-price prefix miss plus writing the new cache entry. **Stay cost** = `prefixTokens * cost.cacheRead` — reading the already-warm prefix.
+- Among models within `FIT_TOLERANCE` of the best fit, the one with the lowest switch cost wins. Cost never overturns a larger fit gap, so price cannot downgrade a model that is genuinely more capable — however long the conversation.
+- When Jev is configured, one Noul judgment (“would switching to `<model>` help this task?”) gates the switch: the probability must clear `requiredConfidence(switchCost)`, so a cheap miss is worth roughly a coin-flip and an expensive one needs near-certainty. Jev supplies the probability, code owns the threshold. Without a Jev judgment, cost only breaks ties and no confidence is claimed.
+- That question is folded into the same request as tool and skill routing when `/jev auto` is enabled, keeping it one Jev request per prompt.
+- A model is not charged a miss for "switching" to itself, and hard input requirements (image/URL) are filtered out before any of this, so cost can never veto a capability the task requires.
 
 ## Commands
 
