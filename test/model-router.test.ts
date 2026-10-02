@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { classifyModelError, classifyModelNeed, AutoModelRouter } from "../src/model-router.js";
+import { classifyModelError, classifyModelNeed, AutoModelRouter, promptHasUrl } from "../src/model-router.js";
 
 const model = (id: string, extra: Record<string, unknown> = {}) => ({
   id, provider: "test", name: id, api: "test", baseUrl: "", reasoning: false,
@@ -11,8 +11,16 @@ test("classifies model needs by task signals", () => {
   assert.equal(classifyModelNeed("plan a security decision").profile, "reasoning");
   assert.equal(classifyModelNeed("inspect this screenshot", 0, true).profile, "vision");
   assert.equal(classifyModelNeed("review this URL", 0, false, true).profile, "url");
+  assert.equal(classifyModelNeed("summarize https://example.com").profile, "url");
+  assert.equal(classifyModelNeed("open docs.example.com/path").profile, "url");
   assert.equal(classifyModelNeed("review the entire codebase").profile, "long-context");
   assert.equal(classifyModelNeed("hi, list files").profile, "fast");
+});
+
+test("detects URLs in prompt text", () => {
+  assert.equal(promptHasUrl("summarize https://example.com"), true);
+  assert.equal(promptHasUrl("summarize example.com/page"), true);
+  assert.equal(promptHasUrl("summarize this page"), false);
 });
 
 test("classifies provider limit errors", () => {
@@ -51,7 +59,7 @@ test("selects URL-capable model for URL input", async () => {
     getSystemPrompt: () => "",
   };
   const router = new AutoModelRouter(pi, true);
-  const result = await router.route("summarize this page", ctx, { hasUrls: true });
+  const result = await router.route("summarize https://example.com", ctx);
   assert.equal(result.model?.id, "opencode-zen");
 });
 

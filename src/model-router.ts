@@ -21,9 +21,15 @@ const PROFILE_HINTS: Record<ModelProfile, RegExp> = {
   balanced: /.*/,
 };
 
+const URL_IN_PROMPT = /\b(?:https?:\/\/|www\.)\S+|\b(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}(?::\d{2,5})?(?:\/\S*)?\b/i;
+
+export function promptHasUrl(prompt: string): boolean {
+  return URL_IN_PROMPT.test(prompt);
+}
+
 export function classifyModelNeed(prompt: string, contextChars = 0, hasImages = false, hasUrls = false): { profile: ModelProfile; confidence: number; reason: string } {
   if (hasImages || PROFILE_HINTS.vision.test(prompt)) return { profile: "vision", confidence: 0.95, reason: "image input or visual task" };
-  if (hasUrls || PROFILE_HINTS.url.test(prompt)) return { profile: "url", confidence: 0.9, reason: "URL input or web task" };
+  if (hasUrls || promptHasUrl(prompt) || PROFILE_HINTS.url.test(prompt)) return { profile: "url", confidence: 0.9, reason: "URL input or web task" };
   if (contextChars > 120_000 || PROFILE_HINTS["long-context"].test(prompt)) return { profile: "long-context", confidence: 0.9, reason: "large context task" };
   if (PROFILE_HINTS.reasoning.test(prompt)) return { profile: "reasoning", confidence: 0.82, reason: "planning or deep reasoning task" };
   if (PROFILE_HINTS.fast.test(prompt) && prompt.length < 240) return { profile: "fast", confidence: 0.78, reason: "short simple task" };
