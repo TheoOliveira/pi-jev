@@ -82,8 +82,8 @@ test("AgentOrchestrator dispatches workflowScript through pi-subagents RPC", asy
   assert.equal(result.runId, "run-abc-123");
   assert.ok(emittedRequest);
   assert.equal(emittedRequest.params.async, true);
-  assert.match(emittedRequest.params.workflowScript, /runs\.run/);
-  assert.match(emittedRequest.params.workflowScript, /scout/);
-  assert.match(emittedRequest.params.workflowScript, /worker/);
-  assert.match(emittedRequest.params.workflowScript, /reviewer/);
+  assert.match(emittedRequest.params.script, /runs\.run/);
+  assert.match(emittedRequest.params.script, /scout/);
+  assert.match(emittedRequest.params.script, /worker/);
+  assert.match(emittedRequest.params.script, /reviewer/);
 });
