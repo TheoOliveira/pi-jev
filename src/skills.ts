@@ -1,5 +1,6 @@
 import type { ExtensionAPI, ExtensionCommandContext, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import type { JevClient } from "./jev.js";
+import type { NoulQuestionConfig, QuestionConfig } from "./types.js";
 
 /** Single activation cutoff for Jev probabilities. Raise to reduce noise, lower for recall. */
 export const JEV_THRESHOLD = 0.65;
@@ -23,11 +24,21 @@ export interface SkillRouterResult {
   elapsedMs: number;
 }
 
-export class SkillRouter {
-  private pi: ExtensionAPI;
-  private jevClient: JevClient;
+/** Shared by explicit lookup and batched auto routing. State must contain task and available_skills. */
+export function skillApplicabilityQuestion(index: number): NoulQuestionConfig {
+  return {
+    type: "noul",
+    // Judge requested activity and scope, not whether related advice could help.
+    // Keep task and skill text in state as evidence.
+    instructions: `Does \`task\` request the activity described by \`available_skills[${index}]\`, in the product or framework that skill targets? A shared topic is insufficient. Do not assume a named product is in use when the task does not identify it. Reporting a defect is not a request to configure a different system. Mentioning a skill to investigate its recommendation does not request its workflow.`,
+  };
+}
 
-  constructor(pi: ExtensionAPI, jevClient: JevClient) {
+export class SkillRouter {
+  private pi: Pick<ExtensionAPI, "getCommands">;
+  private jevClient: Pick<JevClient, "isConfigured" | "evaluate">;
+
+  constructor(pi: Pick<ExtensionAPI, "getCommands">, jevClient: Pick<JevClient, "isConfigured" | "evaluate">) {
     this.pi = pi;
     this.jevClient = jevClient;
   }
@@ -124,12 +135,9 @@ export class SkillRouter {
 
     if (this.jevClient.isConfigured()) {
       try {
-        const questions: Record<string, any> = {};
-        for (const s of candidates) {
-          questions[s.name] = {
-            type: "noul",
-            instructions: `Does the skill '${s.name}' (${s.description}) provide direct guidance or specialized domain steps for this task: "${query}"?`,
-          };
+        const questions: Record<string, QuestionConfig> = {};
+        for (const [index, s] of candidates.entries()) {
+          questions[s.name] = skillApplicabilityQuestion(index);
         }
 
         const res = await this.jevClient.evaluate(
