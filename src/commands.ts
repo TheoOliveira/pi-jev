@@ -7,6 +7,7 @@ import type { AutoModelRouter } from "./model-router.js";
 import type { JevCompactor } from "./compact.js";
 import type { AgentOrchestrator } from "./orchestrator.js";
 import type { ToolGuard } from "./tool-guard.js";
+import type { AutoThinkingRouter } from "./thinking.js";
 import { designEvaluation } from "./designer.js";
 import type { JevEvaluationRequest } from "./types.js";
 import { JEV_TOOL_NAMES, isJevTool } from "./types.js";
@@ -21,12 +22,14 @@ export function registerJevCommands(
   autoModel?: AutoModelRouter,
   compactor?: JevCompactor,
   agents?: AgentOrchestrator,
-  toolGuard?: ToolGuard
+  toolGuard?: ToolGuard,
+  autoThinking?: AutoThinkingRouter
 ): void {
   const agentMode = agents ?? { enabled: false, setEnabled: () => {}, dispatch: async () => ({ accepted: false, error: "disabled" }) };
   const compactMode = compactor ?? { enabled: false, setEnabled: () => {} };
   const modelMode = autoModel ?? { enabled: false, setEnabled: () => {} };
   const guardMode = toolGuard ?? { enabled: false, setEnabled: () => {} };
+  const thinkingMode = autoThinking ?? { enabled: false, setEnabled: () => {} };
   pi.registerCommand("jev", {
     description: "Manage TypeSafe Jev integration (status, enable, disable, auto, test, skills)",
     handler: async (args: string, ctx: ExtensionCommandContext) => {
@@ -34,7 +37,7 @@ export function registerJevCommands(
       const sub = (tokens[0] ?? "").toLowerCase();
       const rest = tokens.slice(1).join(" ");
       const usage =
-        "Available options: /jev status, /jev skills [query], /jev test [prompt], /jev enable, /jev disable, /jev auto [on|off], /jev auto-model [on|off], /jev compact [on|off], /jev auto-agents [on|off], /jev tool-guard [on|off], /jev agents [task]";
+        "Available options: /jev status, /jev skills [query], /jev test [prompt], /jev enable, /jev disable, /jev auto [on|off], /jev auto-model [on|off], /jev thinking [on|off], /jev compact [on|off], /jev auto-agents [on|off], /jev tool-guard [on|off], /jev agents [task]";
 
       if (sub === "status" || sub === "") {
         const origin = jevClient.getKeyOrigin();
@@ -54,6 +57,7 @@ export function registerJevCommands(
             `• Total tokens used: ${jevClient.stats.totalTokens}\n` +
             `• Auto mode: ${auto.enabled ? "on" : "off"}${auto.enabled && !jevClient.isConfigured() ? " (inactive: Jev unconfigured)" : ""}\n` +
             `• Auto-model: ${modelMode.enabled ? "on" : "off"}\n` +
+            `• Auto thinking: ${thinkingMode.enabled ? "on" : "off"}\n` +
             `• Tool guard: ${guardMode.enabled ? "on" : "off"}\n` +
             `• Jev compaction: ${compactMode.enabled ? "on" : "off"}\n` +
             `• Agent orchestration: ${agentMode.enabled ? "on" : "off"}\n` +
@@ -223,6 +227,23 @@ export function registerJevCommands(
         const enabled = arg === "on" ? true : arg === "off" ? false : !modelMode.enabled;
         modelMode.setEnabled(enabled);
         ctx.ui.notify(`Jev auto-model mode ${enabled ? "enabled" : "disabled"}.`, "info");
+        return;
+      }
+
+      if (sub === "thinking" || sub === "reasoning-level") {
+        const arg = rest.toLowerCase();
+        if (arg !== "" && arg !== "on" && arg !== "off") {
+          ctx.ui.notify(`Unknown /jev thinking argument "${rest}". ${usage}`, "warning");
+          return;
+        }
+        const enabled = arg === "on" ? true : arg === "off" ? false : !thinkingMode.enabled;
+        thinkingMode.setEnabled(enabled);
+        ctx.ui.notify(
+          enabled
+            ? "Jev thinking mode enabled: each prompt sets the reasoning level (model unchanged). Budget-based Anthropic thinking is skipped to protect the prompt cache."
+            : "Jev thinking mode disabled.",
+          "info"
+        );
         return;
       }
 
