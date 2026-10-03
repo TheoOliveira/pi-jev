@@ -31,6 +31,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - When Jev is configured, a switch is additionally gated by one Noul judgment, thresholded by `requiredConfidence(switchCost)`. Jev supplies the probability and code owns the threshold (`P > cost/value`), so no dollar value is assigned to a correct answer.
 - The model-switch question is **batched** with the tool/skill questions when `/jev auto` is also on, so a prompt still costs one Jev request rather than two. Auto-model alone also costs one; without Jev it stays fully local and only breaks ties on cost.
 
+### Acknowledgements
+Thanks to the contributors who filed issues and opened pull requests for this release:
+- [@armstrys](https://github.com/armstrys) — per-prompt reasoning-level control (#22) and cost-aware auto-model scoring (#24).
+- [@leftytennis](https://github.com/leftytennis) — skill-routing false-positive fix (#21).
+
 ## [0.6.0] - 2026-09-24
 
 ### Added
