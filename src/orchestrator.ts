@@ -161,6 +161,7 @@ return { worker: worker.output, reviewer: reviewer.output };
 export class AgentOrchestrator {
   public enabled: boolean;
   private running = false;
+  private pendingRunIds = new Set<string>();
 
   constructor(
     private pi: ExtensionAPI,
@@ -222,6 +223,7 @@ export class AgentOrchestrator {
       }
 
       const runId = response.data?.runId ?? response.data?.id;
+      if (runId) this.pendingRunIds.add(runId);
       ctx.ui.notify(
         `Agent orchestration started (${topology} topology)${runId ? ` [${runId}]` : ""}.`,
         "info"
@@ -236,7 +238,7 @@ export class AgentOrchestrator {
 
   public installCompletionNotice(): void {
     this.pi.events.on(ASYNC_COMPLETE, (event: any) => {
-      if (event?.runId) {
+      if (event?.runId && this.pendingRunIds.delete(event.runId)) {
         this.pi.sendMessage({
           customType: "jev-agents",
           display: true,
