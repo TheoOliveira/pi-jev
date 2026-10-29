@@ -119,6 +119,9 @@ export default function (pi: ExtensionAPI) {
   });
 
   pi.on("before_agent_start", async (event, ctx) => {
+    // Custom-message continuations have no user prompt to classify.
+    if (!("prompt" in event)) return;
+
     if (agents.enabled && /\b(architecture|refactor|security review|entire repo|parallel|multiple agents|complex migration)\b/i.test(event.prompt)) {
       await agents.dispatch(event.prompt, ctx, true);
     }
