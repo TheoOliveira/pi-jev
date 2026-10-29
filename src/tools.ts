@@ -144,12 +144,12 @@ export function registerJevTools(
           criteria: Type.Optional(Type.Any({ description: "Options, yes/no criterion, or rubric levels" })),
         })
       ),
-      model: Type.Optional(Type.String({ description: "Jev model identifier (default: jev-latest)" })),
+      model: Type.Optional(Type.String({ description: "Jev model identifier (default: PI_JEV_MODEL or jev-latest)" })),
     }),
     async execute(_toolCallId, params: any, signal, onUpdate) {
       if (!jevClient.isConfigured()) {
         throw new Error(
-          "TypeSafe Jev is not configured. Set TYPESAFE_API_KEY, save ~/.pi/agent/secrets/typesafe_api_key, or set PI_JEV_BASE_URL."
+          "TypeSafe Jev is not configured. Set TYPESAFE_API_KEY, OPENROUTER_API_KEY, save ~/.pi/agent/secrets/typesafe_api_key (or openrouter_api_key), or set PI_JEV_BASE_URL."
         );
       }
 

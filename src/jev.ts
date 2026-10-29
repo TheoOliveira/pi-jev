@@ -13,8 +13,23 @@ import type {
 export type ApiKeySource = "env" | "file";
 type ActiveApiKey = { key: string; origin: string };
 
+export const OPENROUTER_DEFAULT_BASE_URL = "https://openrouter.ai/api";
+export const OPENROUTER_DEFAULT_MODEL = "~typesafe/jev-latest";
+
 export function resolveBaseURL(): string | null {
-  return process.env.PI_JEV_BASE_URL?.trim() || process.env.TYPESAFE_BASE_URL?.trim() || null;
+  const explicit = process.env.PI_JEV_BASE_URL?.trim() || process.env.TYPESAFE_BASE_URL?.trim();
+  if (explicit) return explicit;
+
+  const keySource = resolveApiKeySource();
+  if (keySource?.origin === "$OPENROUTER_API_KEY" || keySource?.origin === "~/.pi/agent/secrets/openrouter_api_key") {
+    return OPENROUTER_DEFAULT_BASE_URL;
+  }
+
+  return null;
+}
+
+export function resolveModel(): string | null {
+  return process.env.PI_JEV_MODEL?.trim() || process.env.TYPESAFE_DEFAULT_MODEL?.trim() || null;
 }
 
 /** Resolve the API key together with where it came from, for status reporting. */
@@ -40,6 +55,27 @@ export function resolveApiKeySource(): { key: string; source: ApiKeySource; orig
     }
   }
 
+  const openrouterEnvKey = process.env.OPENROUTER_API_KEY?.trim();
+  if (openrouterEnvKey) return { key: openrouterEnvKey, source: "env", origin: "$OPENROUTER_API_KEY" };
+
+  const openrouterSecretPath = path.join(
+    os.homedir(),
+    ".pi",
+    "agent",
+    "secrets",
+    "openrouter_api_key"
+  );
+  if (fs.existsSync(openrouterSecretPath)) {
+    try {
+      const content = fs.readFileSync(openrouterSecretPath, "utf8").trim();
+      if (content) {
+        return { key: content, source: "file", origin: "~/.pi/agent/secrets/openrouter_api_key" };
+      }
+    } catch {
+      // Ignore read errors
+    }
+  }
+
   return null;
 }
 
@@ -48,6 +84,7 @@ export class JevClient {
   private apiKey: string | null = null;
   private apiKeySetInSession = false;
   private baseURL: string | null = null;
+  private model: string | null = null;
   public stats: JevSessionStats = {
     requestsCount: 0,
     totalTokens: 0,
@@ -59,6 +96,24 @@ export class JevClient {
 
   public isConfigured(): boolean {
     return Boolean(resolveApiKeySource() || this.apiKey || this.getBaseURL());
+  }
+
+  private isOpenRouter(): boolean {
+    const explicit = resolveBaseURL() || this.baseURL;
+    if (explicit && !explicit.includes("openrouter.ai")) {
+      return false;
+    }
+    const key = this.getActiveApiKey();
+    if (key?.origin === "$OPENROUTER_API_KEY" || key?.origin === "~/.pi/agent/secrets/openrouter_api_key") {
+      return true;
+    }
+    if (key?.key?.startsWith("sk-or-")) {
+      return true;
+    }
+    if (explicit && explicit.includes("openrouter.ai")) {
+      return true;
+    }
+    return false;
   }
 
   private getActiveApiKey(): ActiveApiKey | null {
@@ -74,7 +129,32 @@ export class JevClient {
   }
 
   public getBaseURL(): string | null {
-    return resolveBaseURL() || this.baseURL;
+    const explicit = resolveBaseURL() || this.baseURL;
+    if (explicit) return explicit;
+    if (this.isOpenRouter()) {
+      return OPENROUTER_DEFAULT_BASE_URL;
+    }
+    return null;
+  }
+
+  public setBaseURL(url?: string | null): void {
+    this.baseURL = url?.trim() || null;
+    this.client = null;
+  }
+
+  public getModel(): string | null {
+    if (this.model) return this.model;
+    const resolved = resolveModel();
+    if (resolved) return resolved;
+    if (this.isOpenRouter()) {
+      return OPENROUTER_DEFAULT_MODEL;
+    }
+    return null;
+  }
+
+  public setModel(model?: string | null): void {
+    this.model = model?.trim() || null;
+    this.client = null;
   }
 
   public setApiKey(key: string): void {
@@ -87,10 +167,15 @@ export class JevClient {
     const key = this.getActiveApiKey()?.key ?? null;
     const baseURL = this.getBaseURL();
     if (!key && !baseURL) {
-      throw new Error("Missing TYPESAFE_API_KEY. Set it in environment, ~/.pi/agent/secrets/typesafe_api_key, or set PI_JEV_BASE_URL for a compatible local endpoint.");
+      throw new Error("Missing TYPESAFE_API_KEY or OPENROUTER_API_KEY. Set it in environment, ~/.pi/agent/secrets/typesafe_api_key (or openrouter_api_key), or set PI_JEV_BASE_URL for a compatible local endpoint.");
     }
     if (!this.client) {
-      this.client = new TypeSafeClient({ apiKey: key ?? "", ...(baseURL ? { baseURL } : {}) });
+      const defaultModel = this.getModel() ?? undefined;
+      this.client = new TypeSafeClient({
+        apiKey: key ?? "",
+        ...(baseURL ? { baseURL } : {}),
+        ...(defaultModel ? { defaultModel } : {}),
+      });
     }
     return this.client;
   }
@@ -117,10 +202,11 @@ export class JevClient {
       typeof request.state === "string" ? { text: request.state } : request.state;
 
     try {
+      const model = request.model || this.getModel() || undefined;
       const response: any = await client.systemOne({
         state: statePayload,
         questions: formattedQuestions,
-        model: request.model,
+        model,
       }, { signal });
 
       const elapsedMs = Date.now() - startTime;
@@ -163,7 +249,7 @@ export class JevClient {
 
       return {
         answers,
-        model: response.model || "jev-latest",
+        model: response.model || this.getModel() || "jev-latest",
         usage: response.usage,
         elapsedMs,
       };

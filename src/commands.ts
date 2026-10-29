@@ -53,6 +53,7 @@ export function registerJevCommands(
           `Jev Status:\n` +
             `• Configured: ${origin || endpoint ? `Yes${origin ? ` (from ${origin})` : " (custom endpoint, no API key)"}` : "No"}\n` +
             `• Endpoint: ${endpoint ?? "TypeSafe default"}\n` +
+            `• Model: ${jevClient.getModel?.() ?? "jev-latest"}\n` +
             `• Requests in session: ${jevClient.stats.requestsCount}\n` +
             `• Total tokens used: ${jevClient.stats.totalTokens}\n` +
             `• Auto mode: ${auto.enabled ? "on" : "off"}${auto.enabled && !jevClient.isConfigured() ? " (inactive: Jev unconfigured)" : ""}\n` +
@@ -76,7 +77,7 @@ export function registerJevCommands(
       if (sub === "test" || sub === "eval" || sub === "evaluate") {
         if (!jevClient.isConfigured()) {
           ctx.ui.notify(
-            "Cannot run evaluation: no TypeSafe API key or compatible endpoint. Set TYPESAFE_API_KEY, write ~/.pi/agent/secrets/typesafe_api_key, or set PI_JEV_BASE_URL.",
+            "Cannot run evaluation: no TypeSafe API key or compatible endpoint. Set TYPESAFE_API_KEY, OPENROUTER_API_KEY, write ~/.pi/agent/secrets/typesafe_api_key (or openrouter_api_key), or set PI_JEV_BASE_URL.",
             "error"
           );
           return;
