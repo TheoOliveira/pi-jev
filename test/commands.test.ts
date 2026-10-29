@@ -77,6 +77,7 @@ function harness(designed: unknown, answers: Record<string, any> = {}) {
     calls,
     active: () => [...activeTools],
     auto,
+    jevClient,
   };
 }
 
@@ -178,8 +179,18 @@ test("/jev status reports config origin and excludes own tools from the routable
   const status = calls.at(-1)!.message;
   assert.match(status, /Configured: Yes \(from ~\/\.pi\/agent\/secrets\/typesafe_api_key\)/);
   assert.match(status, /Endpoint: http:\/\/localhost:8000/);
+  assert.match(status, /Model: jev-latest/);
   // active: read. bash is routable; the three jev tools are ours and must not count.
   assert.match(status, /Active tools: 1 \/ Available: 5 \(1 routable\)/);
+});
+
+test("/jev status displays custom model from getModel", async () => {
+  const { run, calls, jevClient } = harness({});
+  (jevClient as any).getModel = () => "tev1:0.8b";
+  await run("status");
+
+  const status = calls.at(-1)!.message;
+  assert.match(status, /• Model: tev1:0\.8b/);
 });
 
 test("/jev enable and /jev disable only touch this extension's tools", async () => {

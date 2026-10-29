@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-10-29
+
+### Added
+- Configurable Jev model via `PI_JEV_MODEL` / `TYPESAFE_DEFAULT_MODEL` / `JevClient.setModel(...)` to easily support local models (e.g. Ollama `tev1:0.8b`) without needing to rename them to `jev-latest` (#31).
+- OpenRouter API key support (`OPENROUTER_API_KEY` or `~/.pi/agent/secrets/openrouter_api_key`) with automatic base URL routing (`https://openrouter.ai/api`) and default model fallback (`~typesafe/jev-latest`) (#30).
+- Model display in `/jev status` showing the resolved Jev model (#31).
+
+### Fixed
+- Limit agent completion notices to explicitly dispatched runs (#33).
+- Skip prompt routing for custom-message continuations without user prompts (#34).
+
+### Acknowledgements
+Thanks to the contributors who filed issues and opened pull requests for this release:
+- [@robchallen](https://github.com/robchallen) — configurable Jev model support (#31).
+- [@stergiosba](https://github.com/stergiosba) — OpenRouter API key integration (#30).
+- [@monsterlag](https://github.com/monsterlag) — agent completion notice filtering (#33).
+- [@dukejeffrie](https://github.com/dukejeffrie) — custom-message continuation routing fix (#34).
+
 ## [0.7.0] - 2026-10-02
 
 ### Added

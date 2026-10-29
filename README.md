@@ -46,13 +46,30 @@ export PI_JEV_BASE_URL=http://localhost:8000
 # TYPESAFE_BASE_URL also works, but PI_JEV_BASE_URL wins.
 ```
 
+To configure or override the Jev model (e.g. for local models or specific revisions):
+
+```bash
+export PI_JEV_MODEL=tev1:0.8b
+# TYPESAFE_DEFAULT_MODEL also works, but PI_JEV_MODEL wins.
+```
+
+You can also use OpenRouter with an OpenRouter API key:
+
+```bash
+export OPENROUTER_API_KEY=sk-or-v1-...
+```
+
+When `OPENROUTER_API_KEY` is present and no custom base URL is specified, `pi-jev` automatically targets `https://openrouter.ai/api` and defaults model to `~typesafe/jev-latest`.
+
 Custom endpoints may omit `TYPESAFE_API_KEY`; `pi-jev` sends an empty key in that case for unauthenticated local servers such as Laya's `laya-serve`.
 
-Or store your TypeSafe key in Pi's secret store file:
+Or store your key in Pi's secret store file:
 
 ```bash
 mkdir -p ~/.pi/agent/secrets
 echo "ts_..." > ~/.pi/agent/secrets/typesafe_api_key
+# or for OpenRouter:
+echo "sk-or-..." > ~/.pi/agent/secrets/openrouter_api_key
 ```
 
 When both session and environment keys exist, an explicit non-empty runtime key set in-session takes precedence and reports origin as `set in-session`, while empty session values safely fall back to the environment key.

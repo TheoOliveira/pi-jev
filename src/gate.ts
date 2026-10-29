@@ -73,7 +73,7 @@ Options:
   -f, --file <path>          Read state from file
       --json                 Output result in JSON format
       --fail-open            Exit 0 even on API or config error
-  -m, --model <model>        Override Jev model (default: jev-latest)
+  -m, --model <model>        Override Jev model (default: PI_JEV_MODEL or jev-latest)
   -h, --help                 Show this help message
 
 Examples:
@@ -138,7 +138,7 @@ export async function evaluateGate(options: GateOptions, jevClient?: JevClient):
         error: "Jev unconfigured (fail-open enabled)",
       };
     }
-    throw new Error("TypeSafe Jev unconfigured. Set TYPESAFE_API_KEY or PI_JEV_BASE_URL.");
+    throw new Error("TypeSafe Jev unconfigured. Set TYPESAFE_API_KEY, OPENROUTER_API_KEY, or PI_JEV_BASE_URL.");
   }
 
   const stateText = resolveGateState(options);
