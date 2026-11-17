@@ -11,7 +11,34 @@ import type { AutoThinkingRouter } from "./thinking.js";
 import { designEvaluation } from "./designer.js";
 import type { JevEvaluationRequest } from "./types.js";
 import { JEV_TOOL_NAMES, isJevTool } from "./types.js";
-import { JEV_THRESHOLD } from "./skills.js";
+import { JEV_THRESHOLD, formatSkillCommand } from "./skills.js";
+
+const JEV_SUBCOMMANDS = [
+  "status",
+  "help",
+  "skills",
+  "test",
+  "enable",
+  "disable",
+  "auto",
+  "auto-model",
+  "thinking",
+  "tool-guard",
+  "compact",
+  "agents",
+  "auto-agents",
+  "model",
+  "endpoint",
+];
+
+const TOGGLE_SUBCOMMANDS = new Set([
+  "auto",
+  "auto-model",
+  "thinking",
+  "tool-guard",
+  "compact",
+  "auto-agents",
+]);
 
 export function registerJevCommands(
   pi: ExtensionAPI,
@@ -31,13 +58,33 @@ export function registerJevCommands(
   const guardMode = toolGuard ?? { enabled: false, setEnabled: () => {} };
   const thinkingMode = autoThinking ?? { enabled: false, setEnabled: () => {} };
   pi.registerCommand("jev", {
-    description: "Manage TypeSafe Jev integration (status, enable, disable, auto, test, skills)",
+    description: "Manage TypeSafe Jev integration (status, enable, disable, auto, test, skills, model, endpoint)",
+    getArgumentCompletions(argumentPrefix: string) {
+      const trimmedStart = argumentPrefix.trimStart();
+      if (!trimmedStart.includes(" ")) {
+        const prefix = trimmedStart.toLowerCase();
+        const matches = JEV_SUBCOMMANDS.filter((c) => c.startsWith(prefix));
+        return matches.length > 0 ? matches.map((c) => ({ value: c, label: c })) : null;
+      }
+      const spaceIdx = trimmedStart.indexOf(" ");
+      const first = trimmedStart.slice(0, spaceIdx).toLowerCase();
+      const second = trimmedStart.slice(spaceIdx + 1).trimStart().toLowerCase();
+      if (second.includes(" ")) return null;
+      if (TOGGLE_SUBCOMMANDS.has(first)) {
+        const opts = ["on", "off"].filter((o) => o.startsWith(second));
+        return opts.length > 0 ? opts.map((o) => ({ value: `${first} ${o}`, label: o })) : null;
+      }
+      if (first === "model" || first === "endpoint") {
+        return "default".startsWith(second) ? [{ value: `${first} default`, label: "default" }] : null;
+      }
+      return null;
+    },
     handler: async (args: string, ctx: ExtensionCommandContext) => {
       const tokens = args.trim().split(/\s+/).filter(Boolean);
       const sub = (tokens[0] ?? "").toLowerCase();
       const rest = tokens.slice(1).join(" ");
       const usage =
-        "Available options: /jev status, /jev skills [query], /jev test [prompt], /jev enable, /jev disable, /jev auto [on|off], /jev auto-model [on|off], /jev thinking [on|off], /jev compact [on|off], /jev auto-agents [on|off], /jev tool-guard [on|off], /jev agents [task]";
+        "Available options: /jev status, /jev skills [query], /jev test [prompt], /jev enable, /jev disable, /jev auto [on|off], /jev auto-model [on|off], /jev thinking [on|off], /jev compact [on|off], /jev auto-agents [on|off], /jev tool-guard [on|off], /jev agents [task], /jev model [name|default], /jev endpoint [url|default]";
 
       if (sub === "status" || sub === "") {
         const origin = jevClient.getKeyOrigin();
@@ -120,7 +167,7 @@ export function registerJevCommands(
         }
 
         try {
-          const res = await jevClient.evaluate(request);
+          const res = await jevClient.evaluate(request, ctx.signal);
 
           ctx.ui.notify(
             (rest ? `Jev Evaluation (${res.elapsedMs}ms):\n` : `Jev Test Successful (${res.elapsedMs}ms):\n`) +
@@ -154,7 +201,7 @@ export function registerJevCommands(
         }
 
         ctx.ui.notify(`Searching skills for: "${query}"...`, "info");
-        const res = await skillRouter.findSkills(query, JEV_THRESHOLD, ctx);
+        const res = await skillRouter.findSkills(query, JEV_THRESHOLD, ctx, ctx.signal);
         if (res.recommended.length === 0) {
           ctx.ui.notify(`No skills matched "${query}".`, "info");
           return;
@@ -163,7 +210,7 @@ export function registerJevCommands(
         ctx.ui.notify(
           `Matching skills for "${query}":\n` +
             res.recommended
-              .map((r) => `• /skill:${r.name} (P=${r.probability.toFixed(2)}) - ${r.description}`)
+              .map((r) => `• ${formatSkillCommand(r.name)} (P=${r.probability.toFixed(2)}) - ${r.description}`)
               .join("\n") +
             (res.fallbackUsed
               ? "\n(Note: Jev unconfigured/offline — local keyword shortlist, probabilities are not Jev judgments)"
@@ -262,6 +309,38 @@ export function registerJevCommands(
             : "Jev auto mode disabled.",
           "info"
         );
+        return;
+      }
+
+      if (sub === "model") {
+        if (!rest) {
+          ctx.ui.notify(`Current Jev model: ${jevClient.getModel?.() ?? "jev-latest"}`, "info");
+          return;
+        }
+        const lower = rest.toLowerCase();
+        if (lower === "default" || lower === "reset" || lower === "clear") {
+          jevClient.setModel?.(null);
+          ctx.ui.notify(`Jev model reset to default (${jevClient.getModel?.() ?? "jev-latest"}).`, "info");
+          return;
+        }
+        jevClient.setModel?.(rest);
+        ctx.ui.notify(`Jev model set to "${jevClient.getModel?.() ?? rest}".`, "info");
+        return;
+      }
+
+      if (sub === "endpoint" || sub === "url") {
+        if (!rest) {
+          ctx.ui.notify(`Current Jev endpoint: ${jevClient.getBaseURL?.() ?? "TypeSafe default"}`, "info");
+          return;
+        }
+        const lower = rest.toLowerCase();
+        if (lower === "default" || lower === "reset" || lower === "clear") {
+          jevClient.setBaseURL?.(null);
+          ctx.ui.notify(`Jev endpoint reset to default (${jevClient.getBaseURL?.() ?? "TypeSafe default"}).`, "info");
+          return;
+        }
+        jevClient.setBaseURL?.(rest);
+        ctx.ui.notify(`Jev endpoint set to "${jevClient.getBaseURL?.() ?? rest}".`, "info");
         return;
       }
 

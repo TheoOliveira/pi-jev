@@ -1,13 +1,18 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { JevClient } from "../src/jev.js";
 import { ToolRouter } from "../src/router.js";
-import { SkillRouter } from "../src/skills.js";
+import { SkillRouter, formatSkillCommand } from "../src/skills.js";
 import { AutoJev } from "../src/auto.js";
 import { registerJevTools } from "../src/tools.js";
 import { registerJevCommands } from "../src/commands.js";
 import { AutoModelRouter, promptHasUrl } from "../src/model-router.js";
 import { JevCompactor } from "../src/compact.js";
-import { AgentOrchestrator } from "../src/orchestrator.js";
+import {
+  AgentOrchestrator,
+  classifyTopologyFallback,
+  topologyQuestion,
+  type OrchestrationTopology,
+} from "../src/orchestrator.js";
 import { JevAgentHandler } from "../src/agent.js";
 import { ToolGuard } from "../src/tool-guard.js";
 import { AutoThinkingRouter } from "../src/thinking.js";
@@ -85,7 +90,15 @@ export default function (pi: ExtensionAPI) {
   registerJevTools(pi, jevClient, router, skillRouter);
   registerJevCommands(pi, jevClient, router, skillRouter, auto, autoModel, compactor, agents, toolGuard, autoThinking);
 
-  pi.on("session_start", (_event, ctx) => {
+  pi.on("session_start", (event, ctx) => {
+    if (!event?.reason || event.reason === "startup" || event.reason === "reload") {
+      if (pi.getFlag("jev-auto") !== undefined) auto.setEnabled(Boolean(pi.getFlag("jev-auto")));
+      if (pi.getFlag("jev-auto-model") !== undefined) autoModel.setEnabled(Boolean(pi.getFlag("jev-auto-model")));
+      if (pi.getFlag("jev-thinking") !== undefined) autoThinking.setEnabled(Boolean(pi.getFlag("jev-thinking")));
+      if (pi.getFlag("jev-compact") !== undefined) compactor.setEnabled(Boolean(pi.getFlag("jev-compact")));
+      if (pi.getFlag("jev-agents") !== undefined) agents.setEnabled(Boolean(pi.getFlag("jev-agents")));
+      if (pi.getFlag("jev-tool-guard") !== undefined) toolGuard.setEnabled(Boolean(pi.getFlag("jev-tool-guard")));
+    }
     if (!jevClient.isConfigured()) {
       ctx.ui.setStatus("jev", "jev: unconfigured");
       return;
@@ -94,6 +107,17 @@ export default function (pi: ExtensionAPI) {
       "jev",
       autoModel.enabled ? "jev: auto-model" : auto.enabled ? "jev: auto" : "jev: ready"
     );
+  });
+
+  pi.on("session_before_tree", async (event, ctx) => {
+    const result = await compactor.compactTree(event, ctx);
+    if (!result.summary) return;
+    ctx.ui.setStatus("jev", `jev: branch compact kept ${result.kept}/${result.considered}`);
+    return {
+      summary: {
+        summary: result.summary,
+      },
+    };
   });
 
   pi.on("session_before_compact", async (event, ctx) => {
@@ -119,21 +143,26 @@ export default function (pi: ExtensionAPI) {
   });
 
   pi.on("before_agent_start", async (event, ctx) => {
-    // Custom-message continuations have no user prompt to classify.
+    // Custom-message continuations and slash commands have no user prompt to classify.
     if (!("prompt" in event)) return;
+    if (typeof event.prompt !== "string" || !event.prompt.trim() || event.prompt.trim().startsWith("/")) return;
 
-    if (agents.enabled && /\b(architecture|refactor|security review|entire repo|parallel|multiple agents|complex migration)\b/i.test(event.prompt)) {
-      await agents.dispatch(event.prompt, ctx, true);
-    }
+    const shouldOrchestrate =
+      agents.enabled &&
+      /\b(architecture|refactor|security review|entire repo|parallel|multiple agents|complex migration)\b/i.test(event.prompt);
 
     const routeOptions = { hasImages: Boolean(event.images?.length), hasUrls: promptHasUrl(event.prompt) || Boolean((event as any).urls?.length) };
     const modelPlan = autoModel.plan(event.prompt, ctx, routeOptions);
 
-    // With auto-routing on, fold the model-switch question into the same Jev
+    // With auto-routing on, fold model-switch and topology questions into the same Jev
     // request so the prompt costs one round-trip instead of two.
     if (!auto.enabled) {
+      if (shouldOrchestrate) {
+        await agents.dispatch(event.prompt, ctx, true);
+      }
+
       const modelResult = modelPlan.plan
-        ? await autoModel.applyDecision(modelPlan.plan, await autoModel.judge(event.prompt, modelPlan.plan))
+        ? await autoModel.applyDecision(modelPlan.plan, await autoModel.judge(event.prompt, modelPlan.plan, ctx.signal))
         : modelPlan.result;
       if (modelResult.changed) ctx.ui.setStatus("jev", `jev: ${modelResult.profile} → ${modelResult.model?.id ?? "model"}`);
 
@@ -144,8 +173,19 @@ export default function (pi: ExtensionAPI) {
       return;
     }
 
-    if (modelPlan.plan) auto.pendingQuestions = [{ key: modelPlan.plan.questionKey, instructions: modelPlan.plan.instructions }];
+    if (modelPlan.plan) auto.pendingQuestions.push({ key: modelPlan.plan.questionKey, instructions: modelPlan.plan.instructions });
+    if (shouldOrchestrate) auto.pendingQuestions.push({ key: "agent:topology", question: topologyQuestion() });
     const result = await auto.route(event.prompt, ctx, ctx.signal);
+
+    if (shouldOrchestrate) {
+      const rawTopo = result.extraAnswers?.["agent:topology"]?.value;
+      const validTopos: OrchestrationTopology[] = ["implementation", "research", "review", "general"];
+      const resolvedTopo =
+        typeof rawTopo === "string" && validTopos.includes(rawTopo as OrchestrationTopology)
+          ? (rawTopo as OrchestrationTopology)
+          : classifyTopologyFallback(event.prompt);
+      await agents.dispatch(event.prompt, ctx, true, resolvedTopo);
+    }
 
     const modelResult = modelPlan.plan
       ? await autoModel.applyDecision(modelPlan.plan, result.modelConfidence)
@@ -172,7 +212,7 @@ export default function (pi: ExtensionAPI) {
         content:
           "Jev auto-matched skill(s) for this task. Load the matching SKILL.md before proceeding:\n" +
           result.skills
-            .map((s) => `• /skill:${s.name} (P=${s.probability.toFixed(2)})`)
+            .map((s) => `• ${formatSkillCommand(s.name)} (P=${s.probability.toFixed(2)})`)
             .join("\n"),
       },
     };

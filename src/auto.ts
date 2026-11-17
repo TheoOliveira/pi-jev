@@ -3,7 +3,7 @@ import type { JevClient } from "./jev.js";
 import type { ToolRouter } from "./router.js";
 import type { SkillRouter } from "./skills.js";
 import { JEV_THRESHOLD, skillApplicabilityQuestion } from "./skills.js";
-import type { QuestionConfig } from "./types.js";
+import type { JevAnswerResult, QuestionConfig } from "./types.js";
 
 export type AutoSkipReason =
   | "disabled"
@@ -20,13 +20,17 @@ export interface AutoRouteResult {
   elapsedMs: number;
   /** Set when a model switch was decided as part of this batched request. */
   modelConfidence?: number;
+  extraAnswers?: Record<string, JevAnswerResult>;
 }
 
-/** A pending model-switch judgment, contributed by the model router. */
-export interface ModelJudgmentContribution {
-  key: "model:switch";
-  instructions: string;
+/** A pending question folded into the next batched request. */
+export interface PendingQuestionContribution {
+  key: string;
+  instructions?: string;
+  question?: QuestionConfig;
 }
+
+export type ModelJudgmentContribution = PendingQuestionContribution;
 
 export { JEV_THRESHOLD };
 
@@ -47,8 +51,8 @@ export class AutoJev {
     this.enabled = enabled;
   }
 
-  /** Extra Noul questions folded into the next batched request. */
-  public pendingQuestions: ModelJudgmentContribution[] = [];
+  /** Extra questions folded into the next batched request. */
+  public pendingQuestions: PendingQuestionContribution[] = [];
 
   public setEnabled(enabled: boolean): void {
     this.enabled = enabled;
@@ -61,6 +65,7 @@ export class AutoJev {
     signal?: AbortSignal
   ): Promise<AutoRouteResult> {
     const startTime = Date.now();
+    const pending = this.pendingQuestions.splice(0);
     const skip = (reason: AutoSkipReason): AutoRouteResult => ({
       ran: false,
       reason,
@@ -95,10 +100,9 @@ export class AutoJev {
       for (const [index, s] of skillCandidates.entries()) {
         questions[`skill:${s.name}`] = skillApplicabilityQuestion(index);
       }
-      for (const q of this.pendingQuestions) {
-        questions[q.key] = { type: "noul", instructions: q.instructions };
+      for (const q of pending) {
+        questions[q.key] = q.question ?? { type: "noul", instructions: q.instructions ?? "" };
       }
-      this.pendingQuestions = [];
 
       const answers = Object.keys(questions).length === 0
         ? {}
@@ -136,6 +140,7 @@ export class AutoJev {
         activated,
         skills,
         modelConfidence,
+        extraAnswers: answers,
         elapsedMs: Date.now() - startTime,
       };
     } catch {

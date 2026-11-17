@@ -4,7 +4,7 @@ import type { JevClient } from "./jev.js";
 import type { ToolRouter } from "./router.js";
 import type { SkillRouter } from "./skills.js";
 import type { QuestionConfig } from "./types.js";
-import { JEV_THRESHOLD } from "./skills.js";
+import { JEV_THRESHOLD, formatSkillCommand } from "./skills.js";
 
 export function registerJevTools(
   pi: ExtensionAPI,
@@ -100,7 +100,7 @@ export function registerJevTools(
       let summaryText = "";
       if (result.recommended.length > 0) {
         const lines = result.recommended.map(
-          (r) => `• /skill:${r.name} (P=${r.probability.toFixed(2)})${r.location ? ` - ${r.location}` : ""}\n  ${r.description}`
+          (r) => `• ${formatSkillCommand(r.name)} (P=${r.probability.toFixed(2)})${r.location ? ` - ${r.location}` : ""}\n  ${r.description}`
         );
         summaryText = `Recommended skill(s):\n${lines.join("\n")}\n\nTo use a skill, invoke /skill:<name> or use the read tool to open its SKILL.md file.`;
       } else if (result.candidates.length > 0) {

@@ -211,3 +211,18 @@ test("batched auto and explicit lookup use the same scope-aware skill question",
   assert.deepEqual(typeof directRequest.state === "object" && directRequest.state.available_skills,
     typeof autoRequest.state === "object" && autoRequest.state.available_skills);
 });
+
+test("AutoJev drains pendingQuestions even when route skips early", async () => {
+  const { jevClient, router, skillRouter } = stubs(false);
+  const auto = new AutoJev(jevClient, router, skillRouter, true);
+  auto.pendingQuestions.push({ key: "model:switch", instructions: "Should switch?" });
+
+  const skipped = await auto.route("/jev status");
+  assert.equal(skipped.ran, false);
+  assert.equal(auto.pendingQuestions.length, 0);
+
+  auto.pendingQuestions.push({ key: "model:switch", instructions: "Should switch?" });
+  const unconfigured = await auto.route("fix bug");
+  assert.equal(unconfigured.reason, "unconfigured");
+  assert.equal(auto.pendingQuestions.length, 0);
+});

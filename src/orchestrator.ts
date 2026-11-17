@@ -1,5 +1,6 @@
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import type { JevClient } from "./jev.js";
+import type { ChoiceQuestionConfig } from "./types.js";
 
 const RPC_REQUEST = "subagents:rpc:v1:request";
 const RPC_REPLY = "subagents:rpc:v1:reply:";
@@ -28,6 +29,19 @@ export function classifyTopologyFallback(task: string): OrchestrationTopology {
   return "general";
 }
 
+export function topologyQuestion(): ChoiceQuestionConfig {
+  return {
+    type: "choice",
+    instructions: "What type of workflow is best suited for this task?",
+    criteria: {
+      implementation: "Code change, bugfix, refactoring, feature implementation, or file modifications",
+      research: "Investigating codebase, external research, architectural analysis, or exploration",
+      review: "Code review, security audit, checking compliance or reviewing a pull request",
+      general: "General question or task not requiring multi-stage implementation",
+    },
+  };
+}
+
 export async function determineTopology(
   task: string,
   jevClient?: JevClient,
@@ -39,16 +53,7 @@ export async function determineTopology(
         {
           state: task,
           questions: {
-            topology: {
-              type: "choice",
-              instructions: "What type of workflow is best suited for this task?",
-              criteria: {
-                implementation: "Code change, bugfix, refactoring, feature implementation, or file modifications",
-                research: "Investigating codebase, external research, architectural analysis, or exploration",
-                review: "Code review, security audit, checking compliance or reviewing a pull request",
-                general: "General question or task not requiring multi-stage implementation",
-              },
-            },
+            topology: topologyQuestion(),
           },
         },
         signal
@@ -178,7 +183,8 @@ export class AgentOrchestrator {
   public async dispatch(
     task: string,
     ctx: ExtensionContext,
-    automatic = false
+    automatic = false,
+    precomputedTopology?: OrchestrationTopology
   ): Promise<OrchestrationResult> {
     if (!this.enabled && automatic) return { accepted: false, error: "disabled" };
     if (this.running) return { accepted: false, error: "busy" };
@@ -186,7 +192,7 @@ export class AgentOrchestrator {
 
     this.running = true;
     try {
-      const topology = await determineTopology(task, this.jevClient, ctx.signal);
+      const topology = precomputedTopology ?? await determineTopology(task, this.jevClient, ctx.signal);
       const workflowScript = buildWorkflowScript(task, topology);
 
       const requestId = globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`;

@@ -23,6 +23,24 @@ function isCandidate(entry: any): boolean {
   return text.includes("tool") || text.includes("bash") || text.includes("assistant");
 }
 
+function selectCompactionEntries(event: any): any[] {
+  if (Array.isArray(event?.branchEntries) && event.branchEntries.length > 0) {
+    let slice = event.branchEntries;
+    const cutId = event.preparation?.firstKeptEntryId;
+    if (cutId) {
+      const idx = slice.findIndex((e: any) => e?.id === cutId);
+      if (idx === 0) slice = [];
+      else if (idx > 0) slice = slice.slice(0, idx);
+    }
+    return slice.slice(-MAX_ENTRIES);
+  }
+  const prep = event?.preparation;
+  if (prep?.messagesToSummarize?.length || prep?.turnPrefixMessages?.length) {
+    return [...(prep.messagesToSummarize ?? []), ...(prep.turnPrefixMessages ?? [])].slice(-MAX_ENTRIES);
+  }
+  return [];
+}
+
 /** Jev-guided compaction summary. Original user/assistant meaning is never rewritten in place. */
 export class JevCompactor {
   public enabled: boolean;
@@ -33,11 +51,18 @@ export class JevCompactor {
 
   public setEnabled(enabled: boolean): void { this.enabled = enabled; }
 
-  public async compact(event: any, _ctx: ExtensionContext): Promise<CompactResult> {
+  private async summarizeEntries(
+    entries: any[],
+    options: {
+      goal?: string;
+      previousSummary?: string;
+      header: string;
+      emptyKeptMessage: string;
+      signal?: AbortSignal;
+    }
+  ): Promise<CompactResult> {
     if (!this.enabled) return { summary: "", kept: 0, considered: 0, skipped: "disabled" };
     if (!this.jevClient.isConfigured()) return { summary: "", kept: 0, considered: 0, skipped: "unconfigured" };
-
-    const entries = (event.branchEntries ?? []).slice(0, MAX_ENTRIES);
     if (entries.length === 0) return { summary: "", kept: 0, considered: 0, skipped: "empty" };
 
     try {
@@ -54,9 +79,9 @@ export class JevCompactor {
 
       const answer = Object.keys(questions).length
         ? await this.jevClient.evaluate({
-            state: { goal: event.customInstructions ?? "Continue the user's ongoing coding task", entries: candidates },
+            state: { goal: options.goal ?? "Continue the user's ongoing coding task", entries: candidates },
             questions,
-          }, event.signal)
+          }, options.signal)
         : { answers: {} } as any;
 
       const kept: string[] = [];
@@ -67,14 +92,49 @@ export class JevCompactor {
         if (probability >= KEEP_THRESHOLD) kept.push(`[entry ${item.index}] ${item.text}`);
       }
 
+      const prev = typeof options.previousSummary === "string" && options.previousSummary.trim()
+        ? `Previous summary: ${options.previousSummary.trim()}`
+        : "";
+
       const summary = [
-        "Jev compaction summary (tool history retained selectively; user/assistant intent preserved):",
-        event.customInstructions ? `Goal: ${event.customInstructions}` : "",
-        kept.length ? kept.join("\n") : "No historical tool entries were judged necessary to retain.",
+        options.header,
+        options.goal ? `Goal: ${options.goal}` : "",
+        prev,
+        kept.length ? kept.join("\n") : options.emptyKeptMessage,
       ].filter(Boolean).join("\n");
       return { summary, kept: kept.length, considered: candidates.length };
     } catch {
       return { summary: "", kept: 0, considered: entries.length, skipped: "error" };
     }
+  }
+
+  public async compact(event: any, _ctx: ExtensionContext): Promise<CompactResult> {
+    if (!this.enabled) return { summary: "", kept: 0, considered: 0, skipped: "disabled" };
+    if (!this.jevClient.isConfigured()) return { summary: "", kept: 0, considered: 0, skipped: "unconfigured" };
+
+    const entries = selectCompactionEntries(event);
+    return this.summarizeEntries(entries, {
+      goal: event.customInstructions ?? event.preparation?.customInstructions,
+      previousSummary: event.preparation?.previousSummary,
+      header: "Jev compaction summary (tool history retained selectively; user/assistant intent preserved):",
+      emptyKeptMessage: "No historical tool entries were judged necessary to retain.",
+      signal: event.signal,
+    });
+  }
+
+  public async compactTree(event: any, _ctx: ExtensionContext): Promise<CompactResult> {
+    if (!this.enabled) return { summary: "", kept: 0, considered: 0, skipped: "disabled" };
+    if (!this.jevClient.isConfigured()) return { summary: "", kept: 0, considered: 0, skipped: "unconfigured" };
+    if (event?.preparation && event.preparation.userWantsSummary === false) {
+      return { summary: "", kept: 0, considered: 0, skipped: "empty" };
+    }
+
+    const entries = (event?.preparation?.entriesToSummarize ?? event?.branchEntries ?? []).slice(-MAX_ENTRIES);
+    return this.summarizeEntries(entries, {
+      goal: event?.preparation?.customInstructions ?? event?.customInstructions,
+      header: "Jev branch summary (tool history retained selectively; user/assistant intent preserved):",
+      emptyKeptMessage: "No branch tool entries were judged necessary to retain.",
+      signal: event?.signal,
+    });
   }
 }

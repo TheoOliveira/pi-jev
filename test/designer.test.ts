@@ -40,6 +40,7 @@ test("validateDesign drops malformed questions and rejects unusable designs", ()
       bad_type: { type: "essay", instructions: "Why?" },
       no_criteria_choice: { type: "choice", instructions: "Which?" },
       empty_score: { type: "score", instructions: "How much?", criteria: [] },
+      single_score: { type: "score", instructions: "Single?", criteria: ["only-one"] },
       blank_instructions: { type: "noul", instructions: "  " },
     },
   });
@@ -56,4 +57,14 @@ test("validateDesign drops malformed questions and rejects unusable designs", ()
 
 test("designed question bound stays within a bounded Jev request", () => {
   assert.ok(MAX_DESIGNED_QUESTIONS >= 1 && MAX_DESIGNED_QUESTIONS <= 10);
+});
+
+test("validateDesign caps accepted questions at MAX_DESIGNED_QUESTIONS", () => {
+  const rawQuestions: Record<string, any> = {};
+  for (let i = 0; i < MAX_DESIGNED_QUESTIONS + 4; i++) {
+    rawQuestions[`q_${i}`] = { type: "noul", instructions: `Question ${i}?` };
+  }
+  const design = validateDesign({ state: "text", questions: rawQuestions });
+  assert.ok(design);
+  assert.equal(Object.keys(design.questions).length, MAX_DESIGNED_QUESTIONS);
 });

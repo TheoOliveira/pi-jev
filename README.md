@@ -12,8 +12,8 @@ Semantic tool routing and typed decisions for the [Pi coding agent](https://pi.d
 - **Automatic Mode (opt-in)**: `--jev-auto` / `PI_JEV_AUTO=1` / `/jev auto on` routes tools and suggests skills before every prompt. Off by default.
 - **Automatic Model Mode (opt-in)**: `--jev-auto-model` / `PI_JEV_AUTO_MODEL=1` / `/jev auto-model on` selects fast, balanced, reasoning, long-context, or vision/URL models per prompt. Scores candidates by capability fit with real prefix-aware cache cost as a tie-breaker. Off by default.
 - **Reasoning-Level Mode (opt-in)**: `--jev-thinking` / `PI_JEV_THINKING=1` / `/jev thinking on` sets the reasoning level per prompt (escalates for planning, debugging, and review; de-escalates for short mechanical tasks) without changing the model, so the prompt cache identity stays fixed. Off by default.
-- **Tool Call Guard (opt-in)**: `--jev-tool-guard` / `PI_JEV_TOOL_GUARD=1` / `/jev tool-guard on` intercepts tool calls with Jev to detect hallucinations and enhance failed results. Off by default.
-- **Jev Compaction (opt-in)**: `--jev-compact` / `PI_JEV_COMPACT=1` / `/jev compact on` uses Jev to retain important tool history during `/compact`, while Pi's normal compaction remains the safe fallback.
+- **Tool Call Guard (opt-in)**: `--jev-tool-guard` / `PI_JEV_TOOL_GUARD=1` / `/jev tool-guard on` intercepts tool calls with Jev to detect hallucinated parameters, confirm or block destructive `bash` commands, and enhance failed results. Off by default.
+- **Jev Compaction (opt-in)**: `--jev-compact` / `PI_JEV_COMPACT=1` / `/jev compact on` uses Jev to retain important tool history during `/compact` and `/tree` branch summarization, while Pi's normal compaction remains the safe fallback.
 - **Agent Orchestration & Typed Agent**: `/jev agents <task>` dispatches `pi-subagents` orchestration; register `agent: "jev"` in workflows for instant sub-second typed judgments without LLM overhead.
 - **Post-Run Gate Check (`jev-gate` CLI)**: Fast binary for subagent `gate` parameters (`npx pi-jev-gate -c "criteria"`). Checks git diff / output and exits 0 on pass or 1 on fail.
 - **On-Demand & Safe**: Runs when called. No unsolicited per-turn API token costs. Fails closed safely: if Jev is unreachable or unconfigured, tool routing does not blindly activate unjudged tools and reports zero confidence on keyword fallbacks.
@@ -167,7 +167,7 @@ Execution is asynchronous; completion is reported back into the session. Automat
 
 ### Jev Compaction
 
-`/jev compact on` enables Jev-guided compaction. Tool-history entries are evaluated for retention; important paths, errors, constraints, and results stay in the custom summary. User and assistant intent is not rewritten. The feature preserves Pi's `firstKeptEntryId` boundary and falls back to Pi's built-in summary when Jev is unconfigured, fails, or returns unusable data. It does not silently truncate context.
+`/jev compact on` enables Jev-guided compaction. Tool-history entries are evaluated for retention; important paths, errors, constraints, and results stay in the custom summary. User and assistant intent is not rewritten. The feature preserves Pi's `firstKeptEntryId` boundary, also summarizes branch entries on `/tree` navigation (`session_before_tree`) when summarizing, and falls back to Pi's built-in summary when Jev is unconfigured, fails, or returns unusable data. It does not silently truncate context.
 
 ### Automatic Model Mode
 
@@ -195,6 +195,8 @@ Candidates are chosen by **capability, with cost as a tie-breaker**, using the m
 
 ## Commands
 
+`/jev` supports Tab argument autocompletion in the Pi TUI:
+
 - `/jev status` — Shows Jev configuration, endpoint, API key origin, auto-mode state, session request count, total tokens, and available tool counts.
 - `/jev help` — Lists available subcommands.
 - `/jev skills [query]` — Discover and rank matching skills in the workspace using Jev.
@@ -204,10 +206,12 @@ Candidates are chosen by **capability, with cost as a tie-breaker**, using the m
 - `/jev auto [on|off]` — Turns automatic per-prompt tool/skill routing on or off (no argument flips it).
 - `/jev auto-model [on|off]` — Turns automatic model selection on or off (no argument flips it).
 - `/jev thinking [on|off]` — Turns per-prompt reasoning-level control on or off (no argument flips it). The model is never changed, so the prompt cache stays valid. Budget-based Anthropic thinking is skipped because Pi derives `budget_tokens` from the level there.
-- `/jev tool-guard [on|off]` — Turns tool call anti-hallucination validation and error guidance on or off.
+- `/jev tool-guard [on|off]` — Turns tool call anti-hallucination validation, destructive `bash` confirmation, and error guidance on or off.
 - `/jev compact [on|off]` — Turns Jev-guided compaction on or off. Run `/compact` after enabling.
 - `/jev agents <task>` — Dispatches the task to `pi-subagents`, which selects and coordinates available agents.
 - `/jev auto-agents [on|off]` — Enables automatic orchestration for complex architecture, refactoring, security, repository-wide, and migration prompts.
+- `/jev model [name|default]` — Inspects, overrides, or resets the active Jev model mid-session.
+- `/jev endpoint [url|default]` — Inspects, overrides, or resets the Jev base URL endpoint mid-session.
 
 ## Tools Provided
 

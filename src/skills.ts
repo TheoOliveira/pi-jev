@@ -24,6 +24,10 @@ export interface SkillRouterResult {
   elapsedMs: number;
 }
 
+export function formatSkillCommand(name: string): string {
+  return name.startsWith("skill:") ? `/${name}` : `/skill:${name}`;
+}
+
 /** Shared by explicit lookup and batched auto routing. State must contain task and available_skills. */
 export function skillApplicabilityQuestion(index: number): NoulQuestionConfig {
   return {
@@ -37,6 +41,7 @@ export function skillApplicabilityQuestion(index: number): NoulQuestionConfig {
 export class SkillRouter {
   private pi: Pick<ExtensionAPI, "getCommands">;
   private jevClient: Pick<JevClient, "isConfigured" | "evaluate">;
+  private cache = new Map<string, Record<string, number>>();
 
   constructor(pi: Pick<ExtensionAPI, "getCommands">, jevClient: Pick<JevClient, "isConfigured" | "evaluate">) {
     this.pi = pi;
@@ -47,29 +52,34 @@ export class SkillRouter {
     const skillsMap = new Map<string, SkillMetadata>();
 
     // 1. Check systemPromptOptions if available in command context
-    if (ctx && "getSystemPromptOptions" in ctx) {
-      try {
-        const opts = (ctx as ExtensionCommandContext).getSystemPromptOptions();
-        if (opts.skills && Array.isArray(opts.skills)) {
-          for (const s of opts.skills as any[]) {
-            if (s.name && s.description) {
-              skillsMap.set(s.name, {
-                name: s.name,
-                description: s.description,
-                location: s.location || s.path,
-              });
+    const sysOpts =
+      ctx && "getSystemPromptOptions" in ctx && typeof (ctx as any).getSystemPromptOptions === "function"
+        ? (() => {
+            try {
+              return (ctx as ExtensionCommandContext).getSystemPromptOptions();
+            } catch {
+              return undefined;
             }
-          }
+          })()
+        : (ctx as any)?.systemPromptOptions;
+
+    if (sysOpts?.skills && Array.isArray(sysOpts.skills)) {
+      for (const s of sysOpts.skills as any[]) {
+        if (s.name && s.description) {
+          skillsMap.set(s.name, {
+            name: s.name,
+            description: s.description,
+            location: s.location || s.path,
+          });
         }
-      } catch {
-        // Fall back to commands/prompts inspection
       }
     }
 
     // 2. Discover from pi.getCommands() which lists skills as source: "skill"
     const commands = this.pi.getCommands();
     for (const cmd of commands) {
-      if (cmd.source === "skill" && !skillsMap.has(cmd.name)) {
+      const bareName = cmd.name.replace(/^skill:/, "");
+      if (cmd.source === "skill" && !skillsMap.has(cmd.name) && !skillsMap.has(bareName)) {
         skillsMap.set(cmd.name, {
           name: cmd.name,
           description: cmd.description || `Skill for ${cmd.name}`,
@@ -131,41 +141,56 @@ export class SkillRouter {
       location?: string;
       probability: number;
     }> = [];
+    const cacheKey = `${query.trim().toLowerCase()}::${candidateNames.join(",")}`;
     let fallbackUsed = false;
+    let probabilities: Record<string, number> | undefined;
 
     if (this.jevClient.isConfigured()) {
-      try {
-        const questions: Record<string, QuestionConfig> = {};
-        for (const [index, s] of candidates.entries()) {
-          questions[s.name] = skillApplicabilityQuestion(index);
-        }
-
-        const res = await this.jevClient.evaluate(
-          {
-            state: { task: query, available_skills: candidates },
-            questions,
-          },
-          signal
-        );
-
-        for (const s of candidates) {
-          const ans = res.answers[s.name];
-          const prob = typeof ans?.value === "number" ? ans.value : 0;
-          if (prob >= threshold) {
-            recommended.push({
-              name: s.name,
-              description: s.description,
-              location: s.location,
-              probability: prob,
-            });
+      const cached = this.cache.get(cacheKey);
+      if (cached) {
+        probabilities = cached;
+      } else {
+        try {
+          const questions: Record<string, QuestionConfig> = {};
+          for (const [index, s] of candidates.entries()) {
+            questions[s.name] = skillApplicabilityQuestion(index);
           }
+
+          const res = await this.jevClient.evaluate(
+            {
+              state: { task: query, available_skills: candidates },
+              questions,
+            },
+            signal
+          );
+
+          probabilities = {};
+          for (const s of candidates) {
+            const ans = res.answers[s.name];
+            probabilities[s.name] = typeof ans?.value === "number" ? ans.value : 0;
+          }
+          this.cache.set(cacheKey, probabilities);
+        } catch {
+          fallbackUsed = true;
         }
-        recommended.sort((a, b) => b.probability - a.probability);
-      } catch {
-        fallbackUsed = true;
       }
     } else {
       fallbackUsed = true;
+    }
+
+    if (probabilities && !fallbackUsed) {
+      for (const s of candidates) {
+        const prob = probabilities[s.name] ?? 0;
+        if (prob >= threshold) {
+          recommended.push({
+            name: s.name,
+            description: s.description,
+            location: s.location,
+            probability: prob,
+          });
+        }
+      }
+      recommended.sort((a, b) => b.probability - a.probability);
     }
 
     if (fallbackUsed) {

@@ -23,6 +23,7 @@ export class ToolRouter {
   private pi: ExtensionAPI;
   private jevClient: JevClient;
   private managedTools = new Set<string>();
+  private cache = new Map<string, Record<string, number>>();
 
   constructor(pi: ExtensionAPI, jevClient: JevClient) {
     this.pi = pi;
@@ -90,37 +91,52 @@ export class ToolRouter {
       };
     }
 
+    const cacheKey = `${query.trim().toLowerCase()}::${candidateNames.join(",")}`;
     const probabilities: Record<string, number> = {};
     const activated: string[] = [];
     let fallbackUsed = false;
 
     if (this.jevClient.isConfigured()) {
-      try {
-        const questions: Record<string, any> = {};
+      const cached = this.cache.get(cacheKey);
+      if (cached) {
         for (const c of candidates) {
-          questions[c.name] = {
-            type: "noul",
-            instructions: `Does the tool '${c.name}' (${c.description || "no description"}) directly help accomplish this task: "${query}"?`,
-          };
-        }
-
-        const res = await this.jevClient.evaluate(
-          {
-            state: { task: query, tools: candidates },
-            questions,
-          },
-          signal
-        );
-
-        for (const [toolName, ans] of Object.entries(res.answers)) {
-          const prob = typeof ans.value === "number" ? ans.value : 0;
-          probabilities[toolName] = prob;
+          const prob = cached[c.name] ?? 0;
+          probabilities[c.name] = prob;
           if (prob >= threshold) {
-            activated.push(toolName);
+            activated.push(c.name);
           }
         }
-      } catch (err) {
-        fallbackUsed = true;
+      } else {
+        try {
+          const questions: Record<string, any> = {};
+          for (const c of candidates) {
+            questions[c.name] = {
+              type: "noul",
+              instructions: `Does the tool '${c.name}' (${c.description || "no description"}) directly help accomplish this task: "${query}"?`,
+            };
+          }
+
+          const res = await this.jevClient.evaluate(
+            {
+              state: { task: query, tools: candidates },
+              questions,
+            },
+            signal
+          );
+
+          const cachedProbs: Record<string, number> = {};
+          for (const [toolName, ans] of Object.entries(res.answers)) {
+            const prob = typeof ans.value === "number" ? ans.value : 0;
+            probabilities[toolName] = prob;
+            cachedProbs[toolName] = prob;
+            if (prob >= threshold) {
+              activated.push(toolName);
+            }
+          }
+          this.cache.set(cacheKey, cachedProbs);
+        } catch (err) {
+          fallbackUsed = true;
+        }
       }
     } else {
       fallbackUsed = true;

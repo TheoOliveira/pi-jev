@@ -8,7 +8,10 @@ import type { AutoJev } from "../src/auto.js";
 
 function harness(designed: unknown, answers: Record<string, any> = {}) {
   let handler: ((args: string, ctx: any) => Promise<void>) | undefined;
+  let getArgumentCompletions: ((prefix: string) => any) | undefined;
   let activeTools = ["read"];
+  let currentModel: string | null = null;
+  let currentBaseURL: string | null = "http://localhost:8000";
   const allTools = [
     { name: "read" },
     { name: "bash" },
@@ -19,6 +22,7 @@ function harness(designed: unknown, answers: Record<string, any> = {}) {
   const pi: any = {
     registerCommand: (_name: string, options: any) => {
       handler = options.handler;
+      getArgumentCompletions = options.getArgumentCompletions;
     },
     getActiveTools: () => [...activeTools],
     getAllTools: () => allTools,
@@ -30,7 +34,14 @@ function harness(designed: unknown, answers: Record<string, any> = {}) {
   const jevClient = {
     isConfigured: () => true,
     getKeyOrigin: () => "~/.pi/agent/secrets/typesafe_api_key",
-    getBaseURL: () => "http://localhost:8000",
+    getBaseURL: () => currentBaseURL,
+    setBaseURL: (url?: string | null) => {
+      currentBaseURL = url?.trim() || null;
+    },
+    getModel: () => currentModel,
+    setModel: (model?: string | null) => {
+      currentModel = model?.trim() || null;
+    },
     stats: { requestsCount: 0, totalTokens: 0 },
     evaluate: async (request: any) => ({
       answers,
@@ -74,6 +85,7 @@ function harness(designed: unknown, answers: Record<string, any> = {}) {
 
   return {
     run: (args: string) => handler!(args, ctx),
+    complete: (prefix: string) => getArgumentCompletions?.(prefix),
     calls,
     active: () => [...activeTools],
     auto,
@@ -210,4 +222,46 @@ test("/jev help lists usage at info level instead of warning", async () => {
 
   assert.match(calls.at(-1)!.message, /\/jev auto \[on\|off\]/);
   assert.equal(calls.at(-1)!.level, "info");
+});
+
+test("/jev model and /jev endpoint inspect, set, and reset runtime config", async () => {
+  const { run, calls, jevClient } = harness({});
+
+  await run("model");
+  assert.match(calls.at(-1)!.message, /Current Jev model: jev-latest/);
+
+  await run("model tev1:0.8b");
+  assert.equal(jevClient.getModel(), "tev1:0.8b");
+  assert.match(calls.at(-1)!.message, /Jev model set to "tev1:0.8b"/);
+
+  await run("model default");
+  assert.equal(jevClient.getModel(), null);
+  assert.match(calls.at(-1)!.message, /Jev model reset to default/);
+
+  await run("endpoint");
+  assert.match(calls.at(-1)!.message, /Current Jev endpoint: http:\/\/localhost:8000/);
+
+  await run("endpoint http://localhost:9000");
+  assert.equal(jevClient.getBaseURL(), "http://localhost:9000");
+  assert.match(calls.at(-1)!.message, /Jev endpoint set to "http:\/\/localhost:9000"/);
+
+  await run("endpoint default");
+  assert.equal(jevClient.getBaseURL(), null);
+  assert.match(calls.at(-1)!.message, /Jev endpoint reset to default/);
+});
+
+test("/jev argument completions suggest subcommands and toggle values", () => {
+  const { complete } = harness({});
+
+  const top = complete("auto");
+  assert.deepEqual(top.map((i: any) => i.value), ["auto", "auto-model", "auto-agents"]);
+
+  const sub = complete("auto o");
+  assert.deepEqual(sub, [
+    { value: "auto on", label: "on" },
+    { value: "auto off", label: "off" },
+  ]);
+
+  const modelOpts = complete("model d");
+  assert.deepEqual(modelOpts, [{ value: "model default", label: "default" }]);
 });

@@ -25,7 +25,7 @@ const PROFILE_HINTS: Record<ModelProfile, RegExp> = {
   balanced: /.*/,
 };
 
-const URL_IN_PROMPT = /\b(?:https?:\/\/|www\.)\S+|\b(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}(?::\d{2,5})?(?:\/\S*)?\b/i;
+const URL_IN_PROMPT = /\b(?:https?:\/\/|www\.)\S+|(?<![/\\.@])\b(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+(?!ts|tsx|js|jsx|mjs|cjs|json|md|yml|yaml|toml|py|rs|go|sh|css|scss|sql|lock|env\b)[a-z]{2,}(?::\d{2,5}(?:\/\S*)?|\/\S+)/i;
 
 export function promptHasUrl(prompt: string): boolean {
   return URL_IN_PROMPT.test(prompt);
@@ -268,7 +268,11 @@ export class AutoModelRouter {
 
     this.running = true;
     try {
-      await this.pi.setModel(plan.model);
+      const switched = await this.pi.setModel(plan.model);
+      if (switched === false) {
+        this.blocked.set(`${plan.model.provider}/${plan.model.id}`, Date.now() + 60_000);
+        return { ...fallback, model: plan.current, reason: "model switch failed: auth" };
+      }
       const price = plan.costKnown ? `, miss ~$${plan.marginUsd.toFixed(4)}` : ", price unknown";
       const judged = confidence !== undefined ? `, P=${confidence.toFixed(2)}` : "";
       const result: ModelRouteResult = {
@@ -289,16 +293,16 @@ export class AutoModelRouter {
 
   public async route(prompt: string, ctx: ExtensionContext, options: { hasImages?: boolean; hasUrls?: boolean; prefixTokens?: number } = {}): Promise<ModelRouteResult> {
     const { result, plan } = this.plan(prompt, ctx, options);
-    return plan ? this.applyDecision(plan, await this.judge(prompt, plan)) : result;
+    return plan ? this.applyDecision(plan, await this.judge(prompt, plan, ctx.signal)) : result;
   }
 
-  public async judge(prompt: string, plan: ModelSwitchPlan): Promise<number | undefined> {
+  public async judge(prompt: string, plan: ModelSwitchPlan, signal?: AbortSignal): Promise<number | undefined> {
     if (!this.jevClient?.isConfigured()) return undefined;
     try {
       const res = await this.jevClient.evaluate({
         state: { task: prompt },
         questions: { [plan.questionKey]: { type: "noul", instructions: plan.instructions } },
-      });
+      }, signal);
       const value = res.answers[plan.questionKey]?.value;
       return typeof value === "number" ? value : undefined;
     } catch {

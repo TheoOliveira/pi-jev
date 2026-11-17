@@ -12,7 +12,7 @@ export const DESIGN_SYSTEM_PROMPT = [
   `- Use 1 to ${MAX_DESIGNED_QUESTIONS} questions, each independent and answerable from "state" alone.`,
   '- "noul" is a yes/no probability question and must NOT include "criteria".',
   '- "choice" requires "criteria" as an object mapping option keys to descriptions.',
-  '- "score" requires "criteria" as an array of rubric levels, highest first.',
+  '- "score" requires "criteria" as an array of at least 2 rubric levels, ordered from lowest (0) to highest.',
   '- "state" must contain concrete, self-contained content: never reference external context.',
 ].join("\n");
 
@@ -45,6 +45,7 @@ export function validateDesign(raw: unknown): JevEvaluationRequest | null {
 
   const questions: Record<string, QuestionConfig> = {};
   for (const [id, value] of Object.entries(candidate.questions as Record<string, unknown>)) {
+    if (Object.keys(questions).length >= MAX_DESIGNED_QUESTIONS) break;
     if (!value || typeof value !== "object") continue;
     const q = value as { type?: unknown; instructions?: unknown; criteria?: unknown };
     if (typeof q.instructions !== "string" || !q.instructions.trim()) continue;
@@ -66,7 +67,7 @@ export function validateDesign(raw: unknown): JevEvaluationRequest | null {
       continue;
     }
 
-    if (!Array.isArray(q.criteria) || q.criteria.length === 0) continue;
+    if (!Array.isArray(q.criteria) || q.criteria.length < 2) continue;
     questions[id] = {
       type: "score",
       instructions: q.instructions,
