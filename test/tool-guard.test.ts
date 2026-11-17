@@ -56,3 +56,46 @@ test("ToolGuard enhances error results with guidance", async () => {
 
   assert.match(hint ?? "", /Path not found/);
 });
+
+test("ToolGuard blocks destructive bash commands in headless mode or when user declines, and allows when confirmed", async () => {
+  const mockPi: any = { on: () => {} };
+  const mockJev: any = {
+    isConfigured: () => true,
+    evaluate: async (req: any) => {
+      assert.ok(req.questions.is_hallucinated);
+      assert.ok(req.questions.is_destructive);
+      return {
+        answers: {
+          is_hallucinated: { type: "noul", value: 0.05 },
+          is_destructive: { type: "noul", value: 0.92 },
+        },
+        model: "jev-latest",
+        elapsedMs: 10,
+      };
+    },
+  };
+
+  const guard = new ToolGuard(mockPi, mockJev, true);
+
+  // Headless (no UI) blocks
+  const headless = await guard.checkToolCall("bash", { command: "rm -rf /tmp/foo" }, { hasUI: false } as any);
+  assert.equal(headless.valid, false);
+  assert.equal(headless.blocked, true);
+  assert.match(headless.reason ?? "", /destructive command/);
+
+  // Interactive UI declined blocks
+  const declined = await guard.checkToolCall("bash", { command: "rm -rf /tmp/foo" }, {
+    hasUI: true,
+    ui: { confirm: async () => false },
+  } as any);
+  assert.equal(declined.valid, false);
+  assert.equal(declined.blocked, true);
+
+  // Interactive UI confirmed allows
+  const confirmed = await guard.checkToolCall("bash", { command: "rm -rf /tmp/foo" }, {
+    hasUI: true,
+    ui: { confirm: async () => true },
+  } as any);
+  assert.equal(confirmed.valid, true);
+  assert.equal(confirmed.blocked, undefined);
+});

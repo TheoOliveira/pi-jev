@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { SkillRouter, type SkillMetadata } from "../src/skills.js";
+import { SkillRouter, formatSkillCommand, type SkillMetadata } from "../src/skills.js";
 import { JevClient } from "../src/jev.js";
 
 test("SkillRouter shortlists skills based on query terms", () => {
@@ -100,4 +100,61 @@ test("scope-aware skills retain multi-label recommendations and the existing cut
   assert.deepEqual(result.recommended.map((s) => s.name), ["skill:setup-pstack", "skill:diagnosing-bugs"]);
   assert.equal(result.fallbackUsed, false);
   assert.deepEqual((await router.findSkills("same task", 0.96)).recommended, []);
+});
+
+test("formatSkillCommand avoids double skill: prefix", () => {
+  assert.equal(formatSkillCommand("tdd"), "/skill:tdd");
+  assert.equal(formatSkillCommand("skill:tdd"), "/skill:tdd");
+});
+
+test("SkillRouter deduplicates skills present in both systemPromptOptions and getCommands", () => {
+  const router = new SkillRouter(
+    {
+      getCommands: () => [
+        { name: "skill:tdd", description: "TDD from commands", source: "skill" } as any,
+        { name: "skill:extra", description: "Extra skill", source: "skill" } as any,
+      ],
+    },
+    { isConfigured: () => false, evaluate: async () => ({ answers: {}, model: "m", elapsedMs: 0 }) }
+  );
+
+  const ctx: any = {
+    getSystemPromptOptions: () => ({
+      skills: [{ name: "tdd", description: "TDD from prompt options", location: "/skills/tdd/SKILL.md" }],
+    }),
+  };
+
+  const skills = router.getAvailableSkills(ctx);
+  assert.deepEqual(
+    skills.map((s) => s.name),
+    ["tdd", "skill:extra"]
+  );
+});
+
+test("SkillRouter caches probabilities per query and candidate list while honoring threshold", async () => {
+  let evaluateCalls = 0;
+  const router = new SkillRouter(
+    {
+      getCommands: () => [
+        { name: "skill:tdd", description: "Test driven development", source: "skill" } as any,
+      ],
+    },
+    {
+      isConfigured: () => true,
+      evaluate: async () => {
+        evaluateCalls += 1;
+        return {
+          answers: { "skill:tdd": { type: "noul", value: 0.8 } },
+          model: "fixture",
+          elapsedMs: 1,
+        };
+      },
+    }
+  );
+
+  const first = await router.findSkills("write unit tests", 0.65);
+  const second = await router.findSkills("  write unit tests ", 0.85);
+  assert.equal(evaluateCalls, 1);
+  assert.equal(first.recommended.length, 1);
+  assert.equal(second.recommended.length, 0);
 });

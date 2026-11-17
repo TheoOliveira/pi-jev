@@ -354,3 +354,42 @@ test("a malformed Jev answer is ignored rather than trusted", async () => {
   assert.equal(result.confidence, undefined);
   assert.equal(result.changed, true);
 });
+
+test("promptHasUrl ignores filenames and code identifiers", () => {
+  for (const text of [
+    "fix bug in router.ts",
+    "edit src/model-router.ts",
+    "read package.json",
+    "check ctx.ui.notify",
+  ]) {
+    assert.equal(promptHasUrl(text), false, `expected false for: ${text}`);
+  }
+  assert.notEqual(classifyModelNeed("fix bug in src/router.ts").profile, "url");
+});
+
+test("applyDecision handles pi.setModel returning false as auth failure and blocks model", async () => {
+  let setCalls = 0;
+  const from = model("from", { cost: { input: 1, output: 1, cacheRead: 0.1, cacheWrite: 1.25 } });
+  const to = model("to-no-auth", { provider: "anthropic", reasoning: true, contextWindow: 200000 });
+  const pi: any = {
+    setModel: async () => {
+      setCalls += 1;
+      return false;
+    },
+  };
+  const ctx = ctxFor(from, [from, to], 1000);
+  const router = new AutoModelRouter(pi, true);
+
+  const first = await router.route("debug this failing test", ctx);
+  assert.equal(setCalls, 1);
+  assert.equal(first.changed, false);
+  assert.equal(first.skipped, "error");
+  assert.equal(first.model?.id, "from");
+  assert.equal(first.reason, "model switch failed: auth");
+
+  // Second attempt should not try the blocked model again
+  const second = await router.route("debug this failing test", ctx);
+  assert.equal(setCalls, 1);
+  assert.equal(second.changed, false);
+  assert.equal(second.model?.id, "from");
+});

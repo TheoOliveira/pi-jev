@@ -18,7 +18,7 @@ export interface ChoiceQuestionConfig extends BaseQuestionConfig {
 
 export interface NoulQuestionConfig extends BaseQuestionConfig {
   type: "noul";
-  criteria?: string;
+  criteria?: string | { true?: string | null; false?: string | null } | null;
 }
 
 export interface ScoreQuestionConfig extends BaseQuestionConfig {
@@ -46,6 +46,8 @@ export interface JevEvaluationResponse {
   answers: Record<string, JevAnswerResult>;
   model: string;
   usage?: {
+    input_tokens?: number;
+    output_tokens?: number;
     inputTokens?: number;
     outputTokens?: number;
     totalTokens?: number;

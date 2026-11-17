@@ -192,7 +192,13 @@ export class JevClient {
       if (q.type === "choice") {
         formattedQuestions[id] = choice(q.instructions, q.criteria);
       } else if (q.type === "noul") {
-        formattedQuestions[id] = noul(q.instructions);
+        const criteria =
+          typeof q.criteria === "string"
+            ? { true: q.criteria }
+            : q.criteria && typeof q.criteria === "object"
+              ? q.criteria
+              : undefined;
+        formattedQuestions[id] = criteria ? noul(q.instructions, criteria) : noul(q.instructions);
       } else if (q.type === "score") {
         formattedQuestions[id] = score(q.instructions, q.criteria as any);
       }
@@ -226,7 +232,7 @@ export class JevClient {
             type: "choice",
             value: c,
             confidence: (rawAns as any).confidence,
-            distribution: (rawAns as any).distribution,
+            distribution: (rawAns as any).distribution ?? (rawAns as any).probabilities,
             raw: rawAns,
           };
         } else if (qConfig.type === "noul") {
@@ -242,6 +248,7 @@ export class JevClient {
             type: "score",
             value: s,
             confidence: (rawAns as any).confidence,
+            distribution: (rawAns as any).distribution ?? (rawAns as any).probabilities,
             raw: rawAns,
           };
         }

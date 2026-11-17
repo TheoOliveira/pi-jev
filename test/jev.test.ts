@@ -375,3 +375,39 @@ test("evaluate passes OpenRouter default model to systemOne when OPENROUTER_API_
     fs.rmSync(tmpHome, { recursive: true, force: true });
   }
 });
+
+test("evaluate forwards noul criteria and maps SDK probabilities to distribution", async () => {
+  let sentQuestions: any;
+  const client = new JevClient();
+  client.setApiKey("test-key");
+  (client as any).client = {
+    systemOne: async (req: any) => {
+      sentQuestions = req.questions;
+      return {
+        model: "jev-test",
+        usage: { input_tokens: 2, output_tokens: 3 },
+        answers: {
+          flag_str: { noul: 0.7 },
+          flag_obj: { noul: 0.8 },
+          kind: { choice: "bug", confidence: 0.9, probabilities: { bug: 0.9, feature: 0.1 } },
+          quality: { score: 1.5, confidence: 0.85, probabilities: { "0": 0.1, "1": 0.3, "2": 0.6 } },
+        },
+      };
+    },
+  };
+
+  const res = await client.evaluate({
+    state: "sample",
+    questions: {
+      flag_str: { type: "noul", instructions: "Valid?", criteria: "Looks valid" },
+      flag_obj: { type: "noul", instructions: "Clean?", criteria: { true: "yes", false: "no" } },
+      kind: { type: "choice", instructions: "Kind?", criteria: { bug: "Bug", feature: "Feature" } },
+      quality: { type: "score", instructions: "Quality?", criteria: ["poor", "ok", "great"] },
+    },
+  });
+
+  assert.deepEqual(sentQuestions.flag_str.criteria, { true: "Looks valid" });
+  assert.deepEqual(sentQuestions.flag_obj.criteria, { true: "yes", false: "no" });
+  assert.deepEqual(res.answers.kind.distribution, { bug: 0.9, feature: 0.1 });
+  assert.deepEqual(res.answers.quality.distribution, { "0": 0.1, "1": 0.3, "2": 0.6 });
+});

@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-11-16
+
+### Added
+- Runtime Jev model and endpoint subcommands: `/jev model [name|default]` and `/jev endpoint [url|default]` (alias `url`) to inspect, override, or reset the active Jev model and base URL mid-session.
+- `/tree` branch summarization support (`session_before_tree`) in `JevCompactor` (`compactTree`) when `/jev compact` is enabled.
+- Destructive `bash` command check (`is_destructive`) in `ToolGuard`, prompting `ctx.ui.confirm` in interactive mode or blocking in headless mode when high-risk commands (`rm -rf`, `git reset --hard`, `git push --force`, etc.) are judged destructive by Jev.
+- Tab argument autocompletion (`getArgumentCompletions`) for `/jev` subcommands and toggle values in Pi TUI.
+- Session-level probability caching in `ToolRouter` and `SkillRouter` keyed by normalized query and candidate set while still applying per-call thresholds.
+
+### Changed
+- Batched `auto-agents` topology classification (`agent:topology`) into the single `AutoJev` evaluation pass when `/jev auto` is enabled, avoiding an extra Jev round-trip.
+- Forwarded `ctx.signal` (`AbortSignal`) to `AutoModelRouter.judge()`, `/jev test`, and `/jev skills`.
+- Aligned `DESIGN_SYSTEM_PROMPT` and `validateDesign()` with `@typesafe-ai/sdk` `score` rubric requirements (at least 2 rubric levels ordered from lowest `0` to highest, capped at `MAX_DESIGNED_QUESTIONS`).
+
+### Fixed
+- Tightened `promptHasUrl` (`URL_IN_PROMPT`) so filenames and dotted code identifiers (`router.ts`, `package.json`, `ctx.ui.notify`) no longer falsely trigger the `url` model profile and filter out standard text/vision models.
+- Synced `--jev-*` CLI flags on `session_start` (`startup`/`reload`) after Pi populates CLI flag values.
+- Deduplicated skills across `systemPromptOptions.skills` and `pi.getCommands()`, and added `formatSkillCommand()` so `skill:`-prefixed names never render as `/skill:skill:<name>`.
+- Checked `pi.setModel()` boolean return value in `AutoModelRouter.applyDecision()` so unauthenticated models returning `false` are treated as `auth` failures and temporarily blocked rather than reported as switched.
+- Skipped slash commands and empty prompts in `before_agent_start`, and drained `AutoJev.pendingQuestions` at the start of `route()` so skipped turns never leak queued questions or trigger unjudged model switches.
+- Mapped `@typesafe-ai/sdk` `probabilities` to `distribution` on `choice` and `score` answers, and forwarded `noul` `criteria` in `JevClient.evaluate()`.
+- Scoped `JevCompactor.compact()` to pre-cut entries before `preparation.firstKeptEntryId` (taking the most recent `MAX_ENTRIES` entries and preserving `previousSummary`).
+
 ## [0.8.0] - 2026-10-29
 
 ### Added

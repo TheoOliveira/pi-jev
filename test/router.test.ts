@@ -119,3 +119,39 @@ test("JevClient handles unconfigured state safely without throwing in check", ()
   const client = new JevClient();
   assert.equal(typeof client.isConfigured(), "boolean");
 });
+
+test("ToolRouter caches probabilities for identical query and candidates while respecting threshold", async () => {
+  let evaluateCalls = 0;
+  let activeTools = ["read"];
+  const jevClient = {
+    isConfigured: () => true,
+    evaluate: async () => {
+      evaluateCalls += 1;
+      return {
+        answers: { sqlite_query: { type: "noul", value: 0.7 } },
+        model: "m",
+        elapsedMs: 1,
+      };
+    },
+  } as unknown as JevClient;
+  const pi: any = {
+    getAllTools: () => [
+      { name: "read", description: "Read files" },
+      { name: "sqlite_query", description: "Query sqlite" },
+    ],
+    getActiveTools: () => activeTools,
+    setActiveTools: (tools: string[]) => {
+      activeTools = tools;
+    },
+  };
+
+  const router = new ToolRouter(pi, jevClient);
+  const first = await router.findAndActivate("query sqlite", 0.8);
+  assert.deepEqual(first.activated, []);
+  assert.equal(evaluateCalls, 1);
+
+  const second = await router.findAndActivate("query sqlite", 0.65);
+  assert.deepEqual(second.activated, ["sqlite_query"]);
+  assert.equal(evaluateCalls, 1);
+  assert.deepEqual(activeTools, ["read", "sqlite_query"]);
+});

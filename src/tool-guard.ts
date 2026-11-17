@@ -2,6 +2,9 @@ import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-a
 import type { JevClient } from "./jev.js";
 import { isJevTool } from "./types.js";
 
+const DESTRUCTIVE_BASH_PATTERN =
+  /\b(rm\s+-[a-z]*(?:r[a-z]*f|f[a-z]*r)|git\s+reset\s+--hard|git\s+clean\s+-[a-z]*f|git\s+push\s+(?:--force|-f)\b|mkfs|dd\s+if=|drop\s+(?:table|database)|truncate\s+table)\b/i;
+
 export interface ToolCallCheckResult {
   valid: boolean;
   blocked?: boolean;
@@ -60,7 +63,7 @@ export class ToolGuard {
   public async checkToolCall(
     toolName: string,
     input: unknown,
-    _ctx?: ExtensionContext,
+    ctx?: ExtensionContext,
     signal?: AbortSignal
   ): Promise<ToolCallCheckResult> {
     const startTime = Date.now();
@@ -69,31 +72,77 @@ export class ToolGuard {
     }
 
     try {
+      const command =
+        toolName === "bash" && input && typeof input === "object" && typeof (input as any).command === "string"
+          ? (input as any).command
+          : undefined;
+      const checkDestructive = Boolean(command && DESTRUCTIVE_BASH_PATTERN.test(command));
+
+      const questions: Record<string, { type: "noul"; instructions: string }> = {
+        is_hallucinated: {
+          type: "noul",
+          instructions: `Does this tool call to '${toolName}' contain hallucinated, fabricated, or nonsensical parameters/paths?`,
+        },
+      };
+      if (checkDestructive) {
+        questions.is_destructive = {
+          type: "noul",
+          instructions:
+            "Does this bash command perform an irreversible or destructive action (such as deleting files, overwriting git history, or dropping data)?",
+        };
+      }
+
       const response = await this.jevClient.evaluate(
         {
           state: {
             tool: toolName,
             parameters: input,
           },
-          questions: {
-            is_hallucinated: {
-              type: "noul",
-              instructions: `Does this tool call to '${toolName}' contain hallucinated, fabricated, or nonsensical parameters/paths?`,
-            },
-          },
+          questions,
         },
         signal
       );
 
       const prob = Number(response.answers["is_hallucinated"]?.value ?? 0);
       const isHallucinated = prob >= 0.85;
+      if (isHallucinated) {
+        return {
+          valid: false,
+          blocked: true,
+          reason: `Jev tool-guard detected hallucinated parameters in ${toolName} call (P=${prob.toFixed(2)}). Check arguments against actual environment.`,
+          probability: prob,
+          elapsedMs: Date.now() - startTime,
+        };
+      }
+
+      if (checkDestructive) {
+        const destructProb = Number(response.answers["is_destructive"]?.value ?? 0);
+        if (destructProb >= 0.8) {
+          if (ctx?.hasUI && typeof ctx?.ui?.confirm === "function") {
+            const confirmed = await ctx.ui.confirm(
+              "Jev Tool Guard",
+              `Allow potentially destructive command (P=${destructProb.toFixed(2)}): ${command}?`
+            );
+            if (confirmed) {
+              return {
+                valid: true,
+                probability: prob,
+                elapsedMs: Date.now() - startTime,
+              };
+            }
+          }
+          return {
+            valid: false,
+            blocked: true,
+            reason: `Jev tool-guard blocked destructive command in ${toolName} (P=${destructProb.toFixed(2)}).`,
+            probability: destructProb,
+            elapsedMs: Date.now() - startTime,
+          };
+        }
+      }
 
       return {
-        valid: !isHallucinated,
-        blocked: isHallucinated,
-        reason: isHallucinated
-          ? `Jev tool-guard detected hallucinated parameters in ${toolName} call (P=${prob.toFixed(2)}). Check arguments against actual environment.`
-          : undefined,
+        valid: true,
         probability: prob,
         elapsedMs: Date.now() - startTime,
       };

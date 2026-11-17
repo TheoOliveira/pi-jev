@@ -39,3 +39,55 @@ test("JevCompactor does nothing while disabled", async () => {
   const result = await new JevCompactor(client, false).compact({ branchEntries: [{ type: "tool_result" }] }, {} as any);
   assert.equal(result.skipped, "disabled");
 });
+
+test("JevCompactor excludes kept entries at/after firstKeptEntryId and takes most recent pre-cut entries", async () => {
+  const { client } = fakeClient(0.9);
+  const preCutEntries = Array.from({ length: 30 }, (_, i) => ({
+    id: `pre-${i}`,
+    type: "tool_result",
+    text: `tool output ${i}`,
+  }));
+  const keptEntries = [
+    { id: "cut-entry", type: "user", text: "must-not-summarize-kept-entry" },
+    { id: "after-cut", type: "tool_result", text: "after-cut-output" },
+  ];
+
+  const result = await new JevCompactor(client, true).compact({
+    preparation: {
+      firstKeptEntryId: "cut-entry",
+      previousSummary: "Earlier summary context",
+    },
+    branchEntries: [...preCutEntries, ...keptEntries],
+  }, {} as any);
+
+  assert.equal(result.considered, 24);
+  assert.doesNotMatch(result.summary, /tool output 0\b/);
+  assert.match(result.summary, /tool output 29\b/);
+  assert.doesNotMatch(result.summary, /must-not-summarize-kept-entry/);
+  assert.match(result.summary, /Previous summary: Earlier summary context/);
+});
+
+test("JevCompactor.compactTree summarizes entriesToSummarize and skips when userWantsSummary is false", async () => {
+  const { client, calls } = fakeClient(0.9);
+  const compactor = new JevCompactor(client, true);
+
+  const skipped = await compactor.compactTree({
+    preparation: { userWantsSummary: false, entriesToSummarize: [{ type: "tool_result", text: "x" }] },
+  }, {} as any);
+  assert.equal(skipped.skipped, "empty");
+  assert.equal(calls.length, 0);
+
+  const res = await compactor.compactTree({
+    preparation: {
+      userWantsSummary: true,
+      customInstructions: "Focus on API migration",
+      entriesToSummarize: [
+        { type: "user", text: "Explore v2 endpoints" },
+        { type: "tool_result", text: "Found /v2/users endpoint in api.ts" },
+      ],
+    },
+  }, {} as any);
+  assert.equal(calls.length, 1);
+  assert.equal(res.kept, 2);
+  assert.match(res.summary, /\/v2\/users/);
+});
